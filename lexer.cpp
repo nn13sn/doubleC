@@ -31,12 +31,38 @@ std::vector <Token> Tokenize(std::string InitLine){
    std::string_view lexeme;
    std::vector <Token> tokens;
     while(pos<InitLine.size()){
-        if(InitLine[pos]==' ') continue;
+        if(InitLine[pos]==' ') {
+            pos++;
+            continue;
+        }
         else if(std::isalpha(InitLine[pos]) || InitLine[pos]=='_') {
             lexeme = readIdentifier(InitLine, pos);
             result = IsKeyword(lexeme);
             if(result != Keyword::amount) tokens.emplace_back(TokenType::Keyword, result, std::string(lexeme), size_t{0}, static_cast<size_t> (pos));
-            else break;
+            else tokens.emplace_back(TokenType::Identifier, result, std::string(lexeme), size_t{0}, static_cast<size_t> (pos));
+            pos++;
+        }
+        else if (std::isdigit(InitLine[pos])) 
+        {
+            tokens.emplace_back(TokenType::Number, Keyword::amount, std::string(1, InitLine[pos]), size_t{0}, static_cast<size_t> (pos));
+            pos++;
+        }
+        else 
+        {
+            switch(InitLine[pos]){
+                case '(':
+                case ')':
+                case ':':
+                case ';':
+                case '[':
+                case ']':
+                tokens.emplace_back(TokenType::Separator, Keyword::amount, std::string(1, InitLine[pos]), size_t{0}, static_cast<size_t> (pos));
+                break;
+                default:
+                tokens.emplace_back(TokenType::Operator, Keyword::amount, std::string(1, InitLine[pos]), size_t{0}, static_cast<size_t> (pos));
+                break;
+            }
+            pos++;
         }
     }
     return tokens;
