@@ -9,10 +9,11 @@ Token::Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t l
 } 
 
 std::string_view readIdentifier(std::string_view InitLine, size_t &pos){
+    size_t startpos = pos;
      while(pos<InitLine.size() && (std::isalpha(InitLine[pos]) || InitLine[pos]=='_')) {
         pos++;
     }
-    return std::string_view(InitLine.data(), InitLine.data()+pos);
+    return std::string_view(InitLine.data()+startpos, InitLine.data()+pos);
 }
 
 Keyword IsKeyword(const std::string_view lexeme){
@@ -40,7 +41,6 @@ std::vector <Token> Tokenize(std::string InitLine){
             result = IsKeyword(lexeme);
             if(result != Keyword::amount) tokens.emplace_back(TokenType::Keyword, result, std::string(lexeme), size_t{0}, static_cast<size_t> (pos));
             else tokens.emplace_back(TokenType::Identifier, result, std::string(lexeme), size_t{0}, static_cast<size_t> (pos));
-            pos++;
         }
         else if (std::isdigit(InitLine[pos])) 
         {
@@ -65,6 +65,7 @@ std::vector <Token> Tokenize(std::string InitLine){
             pos++;
         }
     }
+    tokens.emplace_back(TokenType::End, Keyword::amount, "", size_t{0}, size_t{0});
     return tokens;
 }
 
