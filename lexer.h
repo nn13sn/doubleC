@@ -6,6 +6,8 @@
 #include <string_view>
 #include <cctype>
 #include <cstdint>
+#include <stdexcept>
+#include <fstream>
 
 enum class TokenType{
     Identifier,
@@ -41,3 +43,5 @@ std::string_view readIdentifier(std::string_view InitLine, size_t &pos);
 Keyword IsKeyword(const std::string_view lexeme);
 
 std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& InitLine);
+
+std::vector <std::string> readFile(std::string name);
