@@ -3,12 +3,22 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <variant>
+#include <cstdint>
 
 enum class Datatype{
     Int,
     Char,
     String,
-    Double
+    Double,
+    Bool,
+    Array,
+    Invalid
+};
+
+struct Value {
+  Datatype type;
+  std::variant <int64_t, char, std::string, double, bool, std::vector <Value> > data; 
 };
 
 struct AST{
@@ -42,8 +52,8 @@ struct IfStatement : Statement {
   std::unique_ptr <IfStatement> elseStatement = nullptr;
 };
 
-struct Number : Expression {
-    int number;
+struct exprValue : Expression {
+  Value value;
 };
 
 struct Variable : Expression {

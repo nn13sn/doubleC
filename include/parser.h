@@ -27,6 +27,8 @@ class Parser {
     bool Check(Keyword keyword);
     bool isEnd();
     bool eatEnd();
+    Datatype getDatatype(const TokenType& tokentype);
+    std::variant <int64_t, char, std::string, double, bool, std::vector <Value>> getData(); 
     public:
     Parser(std::vector <std::vector <Token>>& T);
     void Parse(Program& program);

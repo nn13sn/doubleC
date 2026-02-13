@@ -1,11 +1,11 @@
-int value
-value = 1 + 100
+value = 1 + 100.2 + 'a'
 if (value == 9 ){
 out(value / 2 + 12)
 }
-else if (value == 8)
+else if (value >= 101.2)
  {
-out(15)
+out('\n')
+out('\n')
 }
 else {
 out(17)

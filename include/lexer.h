@@ -12,7 +12,10 @@
 enum class TokenType{
     Identifier,
     Keyword,
-    Number, 
+    Number,
+    Double,
+    Symbol, 
+    Boolean,
     String,
     Operator,
     Separator,
@@ -23,6 +26,8 @@ enum class TokenType{
 enum class Keyword : uint8_t {
     If,
     Else, 
+    True,
+    False,
     Int, 
     In,
     Out,
@@ -37,6 +42,10 @@ struct Token{
     size_t columnID;
     Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t lineID, size_t columnID);
 };
+
+char getEscapes(const char& c);
+
+void unexEnd(size_t& i, size_t& pos, std::vector <std::string>& Initialcode);
 
 std::string_view readIdentifier(std::string_view InitLine, size_t &pos);
 

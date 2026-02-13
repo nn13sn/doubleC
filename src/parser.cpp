@@ -41,6 +41,26 @@ bool Parser::eatEnd(){
   return false;
 }
 
+Datatype Parser::getDatatype(const TokenType& tokentype){
+  if(Check(TokenType::Number)) return Datatype::Int;
+  if(Check(TokenType::Double)) return Datatype::Double;
+  if(Check(TokenType::Symbol)) return Datatype::Char;
+  if(Check(TokenType::Boolean)) return Datatype::Bool;
+  if(Check(TokenType::String)) return Datatype::String;
+  return Datatype::Invalid;
+}
+
+std::variant <int64_t, char, std::string, double, bool, std::vector <Value>> Parser::getData(){
+  if(Check(TokenType::Number)) return std::stoi(peek().lexeme);
+  if(Check(TokenType::Double)) return std::stod(peek().lexeme);
+  if(Check(TokenType::Symbol)) return peek().lexeme[0];
+  if(Check(TokenType::String)) return peek().lexeme;
+  if(Check(TokenType::Boolean)){
+    if(peek().lexeme == "true") return true;
+    if (peek().lexeme == "false") return false;
+  }
+}
+
 std::unique_ptr <Program> Parser::MakeBody(){
  auto body = std::make_unique <Program> ();
    eatEnd();
@@ -60,9 +80,10 @@ std::unique_ptr <Program> Parser::MakeBody(){
 }
 
 std::unique_ptr <Expression> Parser::SingleParse(){
-    if(Check(TokenType::Number)){
-        auto expr = std::make_unique <Number> ();
-        expr->number = std::stoi(peek().lexeme);
+    if(Check(TokenType::Number) || Check(TokenType::Double) || Check(TokenType::Boolean) || Check(TokenType::Symbol) || Check(TokenType::String)){
+        auto expr = std::make_unique <exprValue> ();
+        expr->value.type = getDatatype(peek().type);
+        expr->value.data = getData();
         advance();
         return expr;
     }
@@ -75,6 +96,7 @@ std::unique_ptr <Expression> Parser::SingleParse(){
     SyntaxErr();
     return nullptr;
 }
+
 std::unique_ptr <Expression> Parser::MakeExpression(){
   auto expr = ParseMidTerm();
 
@@ -124,24 +146,12 @@ std::unique_ptr <Expression> Parser::ParseMidTerm(){
     return expr;
 }
 
-std::unique_ptr <Statement> Parser::ParseDeclaration(){
- auto stmt = std::make_unique<Declaration> ();
-        if(advance().keyword == Keyword::Int) stmt->type = Datatype::Int;
-            if (Check(TokenType::Identifier)) stmt->name = advance().lexeme;
-            else SyntaxErr();
-            if (Check(TokenType::End)){
-                    return stmt;
-            }
-            else SyntaxErr();
-            return nullptr;
-}
-
 std::unique_ptr <Statement> Parser::ParseOutput(){
  auto stmt = std::make_unique<Output> ();
         advance();
         if (Check("(")) advance();
         else SyntaxErr();
-        if (Check(TokenType::Number) || Check(TokenType::Identifier)) stmt->output = MakeExpression();
+        if (Check(TokenType::Number) || Check(TokenType::Boolean) || Check(TokenType::Symbol) || Check(TokenType::Double) || Check(TokenType::String)|| Check(TokenType::Identifier)) stmt->output = MakeExpression();
         else SyntaxErr();
         if (Check(")")) advance();
         else SyntaxErr();
@@ -194,7 +204,6 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
 }
 
 std::unique_ptr <Statement> Parser::MakeStatement(){
-    if (Check(Keyword::Int)) return ParseDeclaration();
     if(Check(Keyword::Out)) return ParseOutput();
     if (Check(TokenType::Identifier)) return ParseDefinition();
     if(Check(Keyword::If)) return ParseIfStatement();
