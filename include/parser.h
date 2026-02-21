@@ -13,7 +13,7 @@ class Parser {
     Token& advance();
     std::vector <std::vector <Token>>& tokens;
     std::unique_ptr <Statement> MakeStatement();
-    std::unique_ptr <Statement> ParseDeclaration();
+    std::unique_ptr <Statement> ParseInput();
     std::unique_ptr <Statement> ParseOutput();
     std::unique_ptr <Statement> ParseDefinition();
     std::unique_ptr <Statement> ParseIfStatement();
@@ -28,6 +28,7 @@ class Parser {
     bool isEnd();
     bool eatEnd();
     Datatype getDatatype(const TokenType& tokentype);
+    Datatype getDatatype(const Keyword& keyword);
     std::variant <int64_t, char, std::string, double, bool, std::vector <Value>> getData(); 
     public:
     Parser(std::vector <std::vector <Token>>& T);

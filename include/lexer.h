@@ -28,9 +28,13 @@ enum class Keyword : uint8_t {
     Else, 
     True,
     False,
-    Int, 
     In,
     Out,
+    Double,
+    Int, 
+    Char,
+    Bool,
+    String,
     amount
 };
 

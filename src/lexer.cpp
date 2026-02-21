@@ -21,7 +21,7 @@ Token::Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t l
 } 
 
 void unexEnd(size_t& i,size_t& pos, std::vector <std::string>& Initialcode){
-  if (pos==Initialcode[i].size()) throw std::invalid_argument("Error: Unexpected end, at line: " + std::to_string(i) + "; column: " + std::to_string(pos)); 
+  if (pos==Initialcode[i].size()) throw std::invalid_argument("Unexpected ending, at line: " + std::to_string(i) + "; column: " + std::to_string(pos)); 
 }
 
 std::string_view readIdentifier(std::string_view InitLine,size_t& i, size_t &pos){
@@ -35,7 +35,7 @@ std::string_view readIdentifier(std::string_view InitLine,size_t& i, size_t &pos
 
 Keyword IsKeyword(const std::string_view lexeme){
     static constexpr std::array <std::string_view, static_cast <size_t> (Keyword::amount)> keywords {
-        "if", "else", "true", "false", "int", "in", "out"
+        "if", "else", "true", "false", "in", "out","double", "int", "char", "bool", "string"
     };
     for(size_t i=0; i<keywords.size();i++){
         if (lexeme==keywords[i]) return static_cast<Keyword>(i);
@@ -101,13 +101,13 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
       if(Initialcode[i][pos] == '\\'){
         pos++;
         char c = getEscapes(Initialcode[i][pos]);
-        if (c==-1) throw std::runtime_error("Error: Invalid Escape Sequence at line: " + std::to_string(i) + "; column: " + std::to_string(pos));
+        if (c==-1) throw std::invalid_argument("Invalid Escape Sequence at line: " + std::to_string(i) + "; column: " + std::to_string(pos));
         tokens[i].emplace_back(TokenType::Symbol, Keyword::amount,std::string(1,c), i, pos);
       }
       else{
         tokens[i].emplace_back(TokenType::Symbol, Keyword::amount, std::string(1,Initialcode[i][pos]), i,pos);
       }
-      if(Initialcode[i][++pos] !='\'') throw std::invalid_argument("Error: Invalid argument for char, at line: " + std::to_string(i) + "; column: " + std::to_string(pos));
+      if(Initialcode[i][++pos] !='\'') throw std::invalid_argument("Invalid argument for char, at line: " + std::to_string(i) + "; column: " + std::to_string(pos));
       return true;
     }
     else if (Initialcode[i][pos] == '"'){
@@ -159,26 +159,18 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
       return false;
    }
    };
-   try {
    for(size_t i = 0; i < Initialcode.size(); i++){
    tokens.emplace_back();
     for(size_t pos = 0; pos < Initialcode[i].size(); pos++){
-      if(Initialcode[i][pos] == ' ') continue;
+      if(std::isspace(Initialcode[i][pos])) continue;
       else if(letter(i,pos)) continue;
       else if (digit(i,pos)) continue;
       else if (symbols(i,pos)) continue;
       else if (OPERATOR(i,pos)) continue;
       else if (separator(i,pos)) continue;
-      else throw std::invalid_argument("Error: Invalid symbol at line " + std::to_string(i) + "; column: " + std::to_string(pos));
+      else throw std::invalid_argument("Invalid symbol at line " + std::to_string(i) + "; column: " + std::to_string(pos));
     }
     tokens[i].emplace_back(TokenType::End, Keyword::amount, "", i, Initialcode[i].size()-1);
-   }
-   }
-   catch (const std::invalid_argument& e) {
-     std::cerr << e.what() << std::endl;
-   }
-   catch (const std::runtime_error& e){
-     std::cerr << e.what() << std::endl;
    }
     return tokens;
 }

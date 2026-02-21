@@ -21,7 +21,13 @@ struct Value {
   std::variant <int64_t, char, std::string, double, bool, std::vector <Value> > data; 
 };
 
+struct Location{
+  size_t column = 0;
+  size_t line;
+};
+
 struct AST{
+    Location location;
     virtual ~AST() = default;
 };
 
@@ -35,6 +41,10 @@ struct Program : AST {
 struct Declaration : Statement {
      Datatype type;
      std::string name;
+};
+
+struct Input : Statement {
+  std::unique_ptr <Expression> input;
 };
 
 struct Output : Statement {
@@ -70,4 +80,9 @@ struct Logical : Expression {
   std::unique_ptr <Expression> right;
   std::unique_ptr <Expression> left;
   std::string op;
+};
+
+struct Cast : Expression {
+  Datatype castTo;
+  std::unique_ptr <Expression> expr;
 };

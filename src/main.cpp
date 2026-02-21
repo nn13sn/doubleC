@@ -5,17 +5,28 @@
 #include "interpreter.h"
 
 int main(){
+  try{
     Program program;
     std::vector <std::string> code = readFile("code.txt");
-    //std::cout<<"hey\n";
-    //code.push_back("int value;");
-    //code.push_back("value = 1 + 7;");
-    //code.push_back("out(value /2+9);");
     std::vector <std::vector <Token>> tokens = Tokenize(code);
     Parser parser(tokens);
     parser.Parse(program);
     Interpreter interpreter;
     interpreter.execute(program);
-    return 0;
-
+  }
+  catch(const std::invalid_argument& err){
+    std::cerr << "Syntax error: " << err.what() << std::endl;
+    return -1;
+  }
+  catch(const interpreter_error& err){
+    std::cerr << "Runtime error: "<< err.what() << " at line: " + std::to_string(err.location.line);
+    if(err.location.column != 0) std::cerr<< "; column: " + std::to_string(err.location.column);
+    std::cerr<<std::endl;
+    return -2;
+  }
+  catch(const std::runtime_error& err){
+    std::cerr << "Runtime error: " << err.what() << std::endl;
+    return -3;
+  }
+  return 0;
 }
