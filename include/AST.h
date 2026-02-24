@@ -62,6 +62,11 @@ struct IfStatement : Statement {
   std::unique_ptr <IfStatement> elseStatement = nullptr;
 };
 
+struct While : Statement{
+  std::unique_ptr <Program> Instructions = std::make_unique <Program> ();
+  std::unique_ptr <Expression> expr;
+};
+
 struct exprValue : Expression {
   Value value;
 };

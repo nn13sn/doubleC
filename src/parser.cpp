@@ -33,7 +33,6 @@ bool Parser::Check(Keyword keyword){
 
 bool Parser::eatEnd(){
   if(Check(TokenType::End)){
-  if(line == tokens.size()-1) return false;
   line++;
   pos = 0;
   return true;
@@ -82,7 +81,7 @@ std::unique_ptr <Program> Parser::MakeBody(){
     else if (!eatEnd()) SyntaxErr();
   }
   advance();
-  if(Check(TokenType::End)){
+  if(isEnd()){
    if(line == tokens.size()-1) return body; 
    line++;
    pos=0;
@@ -215,7 +214,6 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
   stmt -> expr = MakeExpression();
   if (Check(")")) advance();
   else SyntaxErr();
-  stmt->location.line = peek().lineID;
   eatEnd();
   if (Check("{")) advance();
   else SyntaxErr();
@@ -237,13 +235,27 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
   return stmt;
 }
 
+std::unique_ptr <Statement> Parser::ParseWhile(){
+  auto stmt = std::make_unique<While> ();
+  stmt -> location.line = advance().lineID;
+  if(Check("(")) advance();
+  else SyntaxErr();
+  stmt -> expr = MakeExpression();
+  if(Check(")")) advance();
+  else SyntaxErr();
+  eatEnd();
+  if(Check("{")) advance();
+  else SyntaxErr();
+  stmt->Instructions = MakeBody();
+  return stmt;
+}
+
 std::unique_ptr <Statement> Parser::MakeStatement(){
-    auto stmt = std::make_unique <Statement> ();
-    if(Check(Keyword::Out)) stmt = ParseOutput();
-    else if (Check(Keyword::In)) stmt = ParseInput();
-    else if (Check(TokenType::Identifier)) stmt = ParseDefinition();
-    else if(Check(Keyword::If)) stmt = ParseIfStatement();
-    if(Check(TokenType::End)) return stmt;
+    if(Check(Keyword::Out)) return ParseOutput();
+    else if (Check(Keyword::In)) return ParseInput();
+    else if (Check(TokenType::Identifier)) return ParseDefinition();
+    else if(Check(Keyword::If)) return ParseIfStatement();
+    else if(Check(Keyword::While)) return ParseWhile();
     SyntaxErr();
     return nullptr; 
 }
@@ -251,10 +263,6 @@ std::unique_ptr <Statement> Parser::MakeStatement(){
 void Parser::Parse(Program& program){
     while(line<tokens.size()){
          program.statements.push_back(MakeStatement());
-        if(peek().type == TokenType::End){
-            line++;
-            pos = 0; 
-        }
-        else SyntaxErr();
+         if(!eatEnd() && pos!=0) SyntaxErr();
     }
 }

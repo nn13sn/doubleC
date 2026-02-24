@@ -1,6 +1,6 @@
 #include "interpreter.h"
 
-interpreter_error::interpreter_error(const std::string msg, size_t line, size_t column) : std::runtime_error(msg){
+interpreter_error::interpreter_error(const std::string& msg, size_t line, size_t column) : std::runtime_error(msg){
   location.line = line;
   location.column = column;
 }
@@ -244,7 +244,8 @@ Value* Interpreter::findVar(const std::string& name){
 }
 
 void Interpreter::definition(const Definition& stmt){
-  variables.back()[stmt.name] = eval(*stmt.value);
+  if(auto b = findVar(stmt.name)) *b = eval(*stmt.value);
+  else variables.back()[stmt.name] = eval(*stmt.value);
 }
 
 void Interpreter::input(const Input& stmt){
@@ -310,11 +311,22 @@ void Interpreter::ifStatement(const IfStatement& stmt){
   } 
 }
 
+void Interpreter::whileloop(const While& stmt){
+  while(isTrue(eval(*stmt.expr))) {
+    variables.push_back({});
+    for(size_t i = 0;i < stmt.Instructions -> statements.size(); i++){
+      matchStatement(*stmt.Instructions->statements[i]);
+    }
+    variables.pop_back();
+  }
+}
+
 void Interpreter::matchStatement(const Statement& stmt){
   if (auto a = dynamic_cast<const Output*> (&stmt)) output(*a);
   else if (auto a = dynamic_cast<const Input*> (&stmt)) input(*a);
   else if (auto a = dynamic_cast<const Definition*> (&stmt)) definition(*a);
   else if (auto a = dynamic_cast<const IfStatement*> (&stmt)) ifStatement(*a);
+  else if (auto a = dynamic_cast<const While*> (&stmt)) whileloop(*a); 
 }
 
 void Interpreter::execute(const Program& program){

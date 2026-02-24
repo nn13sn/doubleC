@@ -35,6 +35,8 @@ enum class Keyword : uint8_t {
     Char,
     Bool,
     String,
+    While,
+    For,
     amount
 };
 

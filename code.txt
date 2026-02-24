@@ -2,21 +2,14 @@ in(int(first))
 in(char(operator))
 in(int(second))
 
-
-if (operator == '+'){
-	out(first + second +(5+8/2) )
+if (operator == '+'){	second = second + 1}
+else if (operator == '-'){out(first - second)}
+else if(operator == '*'){out(first * second)}
+else if(operator == '/'){out(first / second)}
+else {out("No such operator")}
+i=0
+while(i<5){
+	out("3\n")
+i = i + 1
 }
-else if (operator == '-'){
-	out(first - second)
-}
-else if(operator == '*'){
-	out(first * second)
-}
-else if(operator == '/'){
-	out(first / second)
-}
-else {
-	out("No such operator")
-}
-
-out("\n")
+out(second)
