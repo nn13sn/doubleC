@@ -78,7 +78,7 @@ std::unique_ptr <Program> Parser::MakeBody(){
     if(Check("}")) break;
     body->statements.push_back(MakeStatement());
     if(Check("}")) break;
-    else if (!eatEnd()) SyntaxErr();
+    else if (!eatEnd() && pos!=0) SyntaxErr();
   }
   advance();
   if(isEnd()){
@@ -132,12 +132,11 @@ std::unique_ptr <Expression> Parser::SingleParse(){
 std::unique_ptr <Expression> Parser::MakeExpression(){
   auto expr = ParseMidTerm();
 
-  while(Check(">") || Check("<") || Check("=")){
+  while(Check(">") || Check("<") || Check("==") || Check(">=") || Check("<=") || Check("!=")){
     auto logic = std::make_unique <Logical> ();
     logic -> location.line = peek().lineID;
     logic -> location.column = peek().columnID;
     logic -> op = advance().lexeme;
-    if(Check ("=")) logic-> op +=advance().lexeme;
     logic -> right = ParseMidTerm();
     logic -> left = std::move(expr);
     expr = std::move(logic);
@@ -250,12 +249,47 @@ std::unique_ptr <Statement> Parser::ParseWhile(){
   return stmt;
 }
 
+std::unique_ptr <Statement> Parser::ParseFor(){
+  auto stmt = std::make_unique <For> ();
+  stmt -> location.line = advance().lineID;
+  if(Check("(")) advance();
+  else SyntaxErr();
+  if(Check(TokenType::Identifier)) {
+    stmt->Initialvalue->location.line = peek().lineID;
+    stmt->Initialvalue->name = advance().lexeme;
+  }
+  else SyntaxErr();
+  if(Check("=")){
+    advance();
+    stmt->Initialvalue->value = MakeExpression();
+  }
+  else if(Check("->")) stmt->Initialvalue->value = nullptr;
+  else SyntaxErr();
+  if(Check("->")){
+    stmt->op = advance().lexeme;
+  }
+  else SyntaxErr();
+  stmt->Finalvalue = MakeExpression();
+  if(Check("(")){
+    if(Check(TokenType::Identifier)) stmt->step.reset(static_cast<Definition*> (ParseDefinition().release()));
+    if(Check(")")) advance();
+    else SyntaxErr();
+  }
+  if(Check(")")) advance();
+  eatEnd();
+  if(Check("{")) advance();
+  else SyntaxErr();
+  stmt->Instructions = MakeBody();
+  return stmt;
+}
+
 std::unique_ptr <Statement> Parser::MakeStatement(){
     if(Check(Keyword::Out)) return ParseOutput();
     else if (Check(Keyword::In)) return ParseInput();
     else if (Check(TokenType::Identifier)) return ParseDefinition();
     else if(Check(Keyword::If)) return ParseIfStatement();
     else if(Check(Keyword::While)) return ParseWhile();
+    else if(Check(Keyword::For)) return ParseFor();
     SyntaxErr();
     return nullptr; 
 }

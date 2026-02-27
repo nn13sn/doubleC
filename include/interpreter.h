@@ -23,6 +23,7 @@ class Interpreter{
   void output(const Output& stmt);
   void definition(const Definition& stmt);
   void whileloop(const While& stmt);
+  void forloop(const For& stmt);
   void ifStatement(const IfStatement& stmt);
   double toDouble(const Value& value);
   int64_t toInt(const Value& value);

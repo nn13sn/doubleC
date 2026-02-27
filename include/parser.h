@@ -18,6 +18,7 @@ class Parser {
     std::unique_ptr <Statement> ParseDefinition();
     std::unique_ptr <Statement> ParseIfStatement();
     std::unique_ptr <Statement> ParseWhile();
+    std::unique_ptr <Statement> ParseFor();
     std::unique_ptr <Expression> ParseMidTerm();
     std::unique_ptr <Expression> MakeExpression();
     std::unique_ptr <Expression> ParseTerm();

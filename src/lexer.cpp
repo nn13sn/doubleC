@@ -128,15 +128,21 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
    auto OPERATOR { [&](size_t& i, size_t& pos){
     switch(Initialcode[i][pos]){
       case '+':
-      case '-':
       case '*':
       case '/':
       case '%':
-      case '>':
-      case '=':
-      case '<':
-      case '!':
       tokens.back().emplace_back(TokenType::Operator, Keyword::amount, std::string(1, Initialcode[i][pos]), i + 1, pos + 1);
+      return true;
+      case '-':
+      if(Initialcode[i][pos+1] == '>') tokens.back().emplace_back(TokenType::Operator, Keyword::amount, "->", i + 1, ++pos +1);
+      else tokens.back().emplace_back(TokenType::Operator, Keyword::amount, "-", i+1, pos + 1);
+      return true;
+      case '>':
+      case '<':
+      case '=':
+      case '!':
+      if(Initialcode[i][pos + 1] == '=') tokens.back().emplace_back(TokenType::Operator, Keyword::amount, std::string(1, Initialcode[i][pos]) + "=", i + 1, ++pos + 1);
+      else tokens.back().emplace_back(TokenType::Operator, Keyword::amount, std::string(1, Initialcode[i][pos]), i + 1, pos +1);
       return true;
     }
     return false;

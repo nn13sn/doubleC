@@ -321,12 +321,48 @@ void Interpreter::whileloop(const While& stmt){
   }
 }
 
+void Interpreter::forloop(const For& stmt){
+  variables.push_back({});
+  if(stmt.Initialvalue->value == nullptr){
+    if(!findVar(stmt.Initialvalue->name)){
+      variables.back()[stmt.Initialvalue->name] = {Datatype::Int, 0};
+    }
+  }
+  else{
+    definition(*stmt.Initialvalue);
+  }
+  int direction;
+   auto Initial = findVar(stmt.Initialvalue->name);
+   auto Final = eval(*stmt.Finalvalue);
+  if(stmt.op == "->"){
+       direction = (toInt(*Initial) > toInt(Final)) - (toInt(*Initial) < toInt(Final));
+  }
+  while((toInt(*Initial) - toInt(eval(*stmt.Finalvalue))) * direction > 0){
+    variables.push_back({});
+    for(size_t i = 0; i<stmt.Instructions -> statements.size();i++){
+    matchStatement(*stmt.Instructions->statements[i]);
+    }
+    variables.pop_back();
+    Initial = findVar(stmt.Initialvalue->name);
+    if(stmt.step == nullptr){
+      std::visit([direction](auto& a){
+          using T = std::decay_t<decltype(a)>;
+          if constexpr (std::is_arithmetic_v<T>){
+            a-=direction;
+          }
+        },Initial->data);
+    }
+  }
+  variables.pop_back();
+}
+
 void Interpreter::matchStatement(const Statement& stmt){
   if (auto a = dynamic_cast<const Output*> (&stmt)) output(*a);
   else if (auto a = dynamic_cast<const Input*> (&stmt)) input(*a);
   else if (auto a = dynamic_cast<const Definition*> (&stmt)) definition(*a);
   else if (auto a = dynamic_cast<const IfStatement*> (&stmt)) ifStatement(*a);
   else if (auto a = dynamic_cast<const While*> (&stmt)) whileloop(*a); 
+  else if (auto a = dynamic_cast<const For*> (&stmt)) forloop(*a);
 }
 
 void Interpreter::execute(const Program& program){

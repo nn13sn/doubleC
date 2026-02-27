@@ -12,4 +12,10 @@ while(i<5){
 	out("3\n")
 i = i + 1
 }
-out(second)
+
+out("\n")
+
+for(t->5){
+	out(t)
+}
+
