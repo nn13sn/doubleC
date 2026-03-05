@@ -12,10 +12,8 @@ while(i<5){
 	out("3\n")
 i = i + 1
 }
-
-out("\n")
-
-for(t->5){
-	out(t)
+for(i=67->=55(i = i - 2)){
+	out(i)
+	out("\n")
 }
 

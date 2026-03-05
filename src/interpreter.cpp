@@ -331,13 +331,23 @@ void Interpreter::forloop(const For& stmt){
   else{
     definition(*stmt.Initialvalue);
   }
-  int direction;
+  int direction = -1;
    auto Initial = findVar(stmt.Initialvalue->name);
-   auto Final = eval(*stmt.Finalvalue);
+   auto Final = toInt(eval(*stmt.Finalvalue));
   if(stmt.op == "->"){
-       direction = (toInt(*Initial) > toInt(Final)) - (toInt(*Initial) < toInt(Final));
+       if (toInt(*Initial) < Final) direction = 1;
   }
-  while((toInt(*Initial) - toInt(eval(*stmt.Finalvalue))) * direction > 0){
+  else if(stmt.op == "->="){
+      if (toInt(*Initial) <= Final) direction = 1;
+  }
+  else throw interpreter_error("Invalid operator", stmt.location.line);
+  while(true){
+    if(stmt.op == "->"){
+      if (!((Final - toInt(*Initial)) * direction > 0)) break;
+    }
+    else if (stmt.op == "->="){
+      if (!((Final - toInt(*Initial)) * direction >= 0)) break;
+    }
     variables.push_back({});
     for(size_t i = 0; i<stmt.Instructions -> statements.size();i++){
     matchStatement(*stmt.Instructions->statements[i]);
@@ -348,9 +358,12 @@ void Interpreter::forloop(const For& stmt){
       std::visit([direction](auto& a){
           using T = std::decay_t<decltype(a)>;
           if constexpr (std::is_arithmetic_v<T>){
-            a-=direction;
+            a+=direction;
           }
         },Initial->data);
+    }
+    else {
+      definition(*stmt.step);
     }
   }
   variables.pop_back();

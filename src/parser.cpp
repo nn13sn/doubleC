@@ -254,6 +254,7 @@ std::unique_ptr <Statement> Parser::ParseFor(){
   stmt -> location.line = advance().lineID;
   if(Check("(")) advance();
   else SyntaxErr();
+  stmt->Initialvalue->value = nullptr;
   if(Check(TokenType::Identifier)) {
     stmt->Initialvalue->location.line = peek().lineID;
     stmt->Initialvalue->name = advance().lexeme;
@@ -263,14 +264,17 @@ std::unique_ptr <Statement> Parser::ParseFor(){
     advance();
     stmt->Initialvalue->value = MakeExpression();
   }
-  else if(Check("->")) stmt->Initialvalue->value = nullptr;
-  else SyntaxErr();
   if(Check("->")){
+    stmt->op = advance().lexeme;
+    if(Check("=")) stmt->op += advance().lexeme; 
+  }
+  else if (Check("!=")){
     stmt->op = advance().lexeme;
   }
   else SyntaxErr();
   stmt->Finalvalue = MakeExpression();
   if(Check("(")){
+    advance();
     if(Check(TokenType::Identifier)) stmt->step.reset(static_cast<Definition*> (ParseDefinition().release()));
     if(Check(")")) advance();
     else SyntaxErr();

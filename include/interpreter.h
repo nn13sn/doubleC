@@ -5,6 +5,7 @@
 #include <map>
 #include <unordered_map>
 #include <cmath>
+#include <functional>
 
 class interpreter_error : public std::runtime_error{
   public:
