@@ -49,14 +49,24 @@ struct Token{
     Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t lineID, size_t columnID);
 };
 
-char getEscapes(const char& c);
+class Lexer{
+  static constexpr std::array <std::string_view, static_cast <size_t> (Keyword::amount)> keywords {
+        "if", "else", "true", "false", "in", "out","double", "int", "char", "bool", "string", "while", "for"
+  };
+  Keyword IsKeyword(const std::string_view lexeme);
+  std::vector <std::string> Initialcode;
+  std::vector <std::vector <Token>> tokens;
+  size_t i;
+  size_t pos;
+  bool isLetter();
+  bool isDigit();
+  bool isText();
+  bool isOperator();
+  bool isSeparator();
+  char getEscapes(const char& c);
+  void unexEnd();
+  public:
+  std::vector <std::vector <Token>> Tokenize();
+  void readFile(std::string name);
+};
 
-void unexEnd(size_t& i, size_t& pos, std::vector <std::string>& Initialcode);
-
-std::string_view readIdentifier(std::string_view InitLine, size_t &pos);
-
-Keyword IsKeyword(const std::string_view lexeme);
-
-std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& InitLine);
-
-std::vector <std::string> readFile(std::string name);

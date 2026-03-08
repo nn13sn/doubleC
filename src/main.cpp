@@ -7,8 +7,9 @@
 int main(){
   try{
     Program program;
-    std::vector <std::string> code = readFile("code.txt");
-    std::vector <std::vector <Token>> tokens = Tokenize(code);
+    Lexer lexer;
+    lexer.readFile("code.txt");
+    auto tokens = lexer.Tokenize();
     Parser parser(tokens);
     parser.Parse(program);
     Interpreter interpreter;

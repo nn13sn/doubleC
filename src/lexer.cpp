@@ -1,15 +1,13 @@
 #include "lexer.h"
 
-std::vector <std::string> readFile(std::string name){
-  std::vector <std::string> code;
+void Lexer::readFile(std::string name){
   std::string line;
   std::ifstream in(name);
   if(in.is_open()){
     while(std::getline(in, line)){
-      code.push_back(line);
+      Initialcode.push_back(line);
     }
   }
-  return code;
 }
 
 Token::Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t lineID, size_t columnID){
@@ -20,30 +18,18 @@ Token::Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t l
     this->columnID=columnID;
 } 
 
-void unexEnd(size_t& i,size_t& pos, std::vector <std::string>& Initialcode){
+void Lexer::unexEnd(){
   if (pos==Initialcode[i].size()) throw std::invalid_argument("Unexpected ending, at line: " + std::to_string(i) + "; column: " + std::to_string(pos)); 
 }
 
-std::string_view readIdentifier(std::string_view InitLine,size_t& i, size_t &pos){
-    size_t startpos = pos;
-     while(pos<InitLine.size() && (std::isalpha(InitLine[pos]) || InitLine[pos]=='_')) {
-       pos++;
-    }
-     pos--;
-    return std::string_view(InitLine.data()+startpos, InitLine.data()+pos+1);
-}
-
-Keyword IsKeyword(const std::string_view lexeme){
-    static constexpr std::array <std::string_view, static_cast <size_t> (Keyword::amount)> keywords {
-        "if", "else", "true", "false", "in", "out","double", "int", "char", "bool", "string", "while", "for"
-    };
+Keyword Lexer::IsKeyword(const std::string_view lexeme){
     for(size_t i=0; i<keywords.size();i++){
         if (lexeme==keywords[i]) return static_cast<Keyword>(i);
     }
     return Keyword::amount;
 }
 
-char getEscapes(const char& c){
+char Lexer::getEscapes(const char& c){
   switch(c){
     case 'n': return '\n';
     case '"': return '\"';
@@ -56,25 +42,28 @@ char getEscapes(const char& c){
   }
 }
 
-std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcode){
-   std::vector <std::vector <Token>> tokens;
-   auto letter {[&](size_t& i, size_t& pos){
-    if(std::isalpha(Initialcode[i][pos]) || Initialcode[i][pos]=='_') {
-            std::string_view lexeme = readIdentifier(Initialcode[i], i, pos);
-            if (lexeme == "true" || lexeme == "false"){
-              tokens.back().emplace_back(TokenType::Boolean, Keyword::amount, std::string(lexeme), i + 1, pos - lexeme.size()+2);
-              return true;
-            }
-            Keyword result = IsKeyword(lexeme);
-            if(result != Keyword::amount) tokens.back().emplace_back(TokenType::Keyword, result, std::string(lexeme), i + 1 , pos - lexeme.size() + 2);
-            else tokens.back().emplace_back(TokenType::Identifier, result, std::string(lexeme), i + 1, pos - lexeme.size() + 2);
-            return true;
+bool Lexer::isLetter(){
+  if(std::isalpha(Initialcode[i][pos]) || Initialcode[i][pos]=='_') {
+    size_t startpos = pos;
+     while(pos<Initialcode[i].size() && (std::isalpha(Initialcode[i][pos]) || Initialcode[i][pos]=='_')) {
+       pos++;
+    }
+    pos--;
+    auto lexeme = std::string_view(Initialcode[i].data()+startpos, Initialcode[i].data()+pos+1);
+        if (lexeme == "true" || lexeme == "false"){
+          tokens.back().emplace_back(TokenType::Boolean, Keyword::amount, std::string(lexeme), i + 1, pos - lexeme.size()+2);
+          return true;
+        }
+         Keyword result = IsKeyword(lexeme);
+         if(result != Keyword::amount) tokens.back().emplace_back(TokenType::Keyword, result, std::string(lexeme), i + 1 , pos - lexeme.size() + 2);
+         else tokens.back().emplace_back(TokenType::Identifier, result, std::string(lexeme), i + 1, pos - lexeme.size() + 2);
+         return true;
     }
     return false;
-   }
-   };
-   auto digit { [&](size_t& i, size_t& pos){
-     size_t startpos = pos;
+}
+
+bool Lexer::isDigit(){
+    size_t startpos = pos;
     if(std::isdigit(Initialcode[i][pos])){
      while(pos<Initialcode[i].size() && (std::isdigit(Initialcode[i][pos]))){
        pos++;
@@ -93,9 +82,9 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
      return true;
     }
     return false;
-   }
-   };
-   auto symbols {[&](size_t& i, size_t& pos) {
+}
+
+bool Lexer::isText(){
     if(Initialcode[i][pos] == '\''){
       pos++;
       if(Initialcode[i][pos] == '\\'){
@@ -117,15 +106,15 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
        if(Initialcode[i][pos] == '\\') str+=getEscapes(Initialcode[i][++pos]);
        else str+=Initialcode[i][pos];
        pos++;
-       unexEnd(i,pos, Initialcode);
+       unexEnd();
       }
       tokens.back().emplace_back(TokenType::String, Keyword::amount, str, i + 1, pos + 1);
       return true;
     }
     return false;
-   }
-   };
-   auto OPERATOR { [&](size_t& i, size_t& pos){
+}
+
+bool Lexer::isOperator(){
     switch(Initialcode[i][pos]){
       case '+':
       case '*':
@@ -146,10 +135,10 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
       return true;
     }
     return false;
-   }
-   };
-   auto separator {[&](size_t& i, size_t& pos){
-      switch(Initialcode[i][pos]){
+}
+
+bool Lexer::isSeparator(){
+    switch(Initialcode[i][pos]){
         case '(':
         case ')':
         case ':':
@@ -163,18 +152,19 @@ std::vector <std::vector <Token>> Tokenize(std::vector <std::string>& Initialcod
         break;
       }
       return false;
-   }
-   };
-   for(size_t i = 0; i < Initialcode.size(); i++){
+}
+
+std::vector <std::vector <Token>> Lexer::Tokenize(){
+   for(i = 0; i < Initialcode.size(); i++){
     if (Initialcode[i].size() == 0 ) continue;
    tokens.emplace_back();
-    for(size_t pos = 0; pos < Initialcode[i].size(); pos++){
+    for(pos = 0; pos < Initialcode[i].size(); pos++){
       if(std::isspace(Initialcode[i][pos])) continue;
-      else if(letter(i,pos)) continue;
-      else if (digit(i,pos)) continue;
-      else if (symbols(i,pos)) continue;
-      else if (OPERATOR(i,pos)) continue;
-      else if (separator(i,pos)) continue;
+      else if(isLetter()) continue;
+      else if (isDigit()) continue;
+      else if (isText()) continue;
+      else if (isOperator()) continue;
+      else if (isSeparator()) continue;
       else throw std::invalid_argument("Invalid symbol at line " + std::to_string(i) + "; column: " + std::to_string(pos));
     }
     tokens.back().emplace_back(TokenType::End, Keyword::amount, "", i + 1, Initialcode[i].size());

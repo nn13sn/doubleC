@@ -321,34 +321,8 @@ void Interpreter::whileloop(const While& stmt){
   }
 }
 
-void Interpreter::forloop(const For& stmt){
+void Interpreter::forbody(Value*& Initial, const short& direction, const For& stmt){
   variables.push_back({});
-  if(stmt.Initialvalue->value == nullptr){
-    if(!findVar(stmt.Initialvalue->name)){
-      variables.back()[stmt.Initialvalue->name] = {Datatype::Int, 0};
-    }
-  }
-  else{
-    definition(*stmt.Initialvalue);
-  }
-  int direction = -1;
-   auto Initial = findVar(stmt.Initialvalue->name);
-   auto Final = toInt(eval(*stmt.Finalvalue));
-  if(stmt.op == "->"){
-       if (toInt(*Initial) < Final) direction = 1;
-  }
-  else if(stmt.op == "->="){
-      if (toInt(*Initial) <= Final) direction = 1;
-  }
-  else throw interpreter_error("Invalid operator", stmt.location.line);
-  while(true){
-    if(stmt.op == "->"){
-      if (!((Final - toInt(*Initial)) * direction > 0)) break;
-    }
-    else if (stmt.op == "->="){
-      if (!((Final - toInt(*Initial)) * direction >= 0)) break;
-    }
-    variables.push_back({});
     for(size_t i = 0; i<stmt.Instructions -> statements.size();i++){
     matchStatement(*stmt.Instructions->statements[i]);
     }
@@ -365,6 +339,55 @@ void Interpreter::forloop(const For& stmt){
     else {
       definition(*stmt.step);
     }
+}
+
+void Interpreter::forloop(const For& stmt){
+  variables.push_back({});
+  if(stmt.Initialvalue->value == nullptr){
+    if(!findVar(stmt.Initialvalue->name)){
+      variables.back()[stmt.Initialvalue->name] = {Datatype::Int, 0};
+    }
+  }
+  else{
+    definition(*stmt.Initialvalue);
+  }
+  short direction = -1;
+   auto Initial = findVar(stmt.Initialvalue->name);
+   int64_t Final;
+   if(auto a = eval(*stmt.Finalvalue); isNumeric(a) && isNumeric(*Initial)){
+    Final = toInt(a);
+   }
+   else throw interpreter_error("The data type is not numerical", stmt.location.line);
+  if(stmt.op == "->"){
+       if (toInt(*Initial) < Final) direction = 1;
+  }
+  else if(stmt.op == "->="){
+      if (toInt(*Initial) <= Final) direction = 1;
+  }
+  else if(stmt.op == ">" || stmt.op == "!=" || stmt.op == "<" || stmt.op == "<=" || stmt.op == ">="){
+    direction = 1;
+  }
+  else throw interpreter_error("Invalid operator", stmt.location.line);
+  if(stmt.op == "->"){
+      while((Final - toInt(*Initial)) * direction > 0){forbody(Initial, direction, stmt);}
+  }
+  else if(stmt.op == "->="){
+      while((Final - toInt(*Initial)) * direction >= 0){forbody(Initial, direction, stmt);}
+  }
+  else if(stmt.op == "!="){
+      while(toInt(*Initial) != Final){forbody(Initial, direction, stmt);}
+  }
+  else if(stmt.op == ">"){
+      while(toInt(*Initial) > Final){forbody(Initial, direction, stmt);}
+  }
+  else if(stmt.op == "<"){
+      while(toInt(*Initial) < Final){forbody(Initial, direction, stmt);}
+  }
+   else if(stmt.op == ">="){
+      while(toInt(*Initial) >= Final){forbody(Initial, direction, stmt);}
+  }
+   else if(stmt.op == "<="){
+      while(toInt(*Initial) <= Final){forbody(Initial, direction, stmt);}
   }
   variables.pop_back();
 }

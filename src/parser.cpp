@@ -268,7 +268,7 @@ std::unique_ptr <Statement> Parser::ParseFor(){
     stmt->op = advance().lexeme;
     if(Check("=")) stmt->op += advance().lexeme; 
   }
-  else if (Check("!=")){
+  else if (Check("!=") || Check(">") || Check("<") || Check("<=") || Check(">=")){
     stmt->op = advance().lexeme;
   }
   else SyntaxErr();

@@ -5,7 +5,6 @@
 #include <map>
 #include <unordered_map>
 #include <cmath>
-#include <functional>
 
 class interpreter_error : public std::runtime_error{
   public:
@@ -25,6 +24,7 @@ class Interpreter{
   void definition(const Definition& stmt);
   void whileloop(const While& stmt);
   void forloop(const For& stmt);
+  void forbody(Value*& Initial, const short& direction, const For& stmt);
   void ifStatement(const IfStatement& stmt);
   double toDouble(const Value& value);
   int64_t toInt(const Value& value);
