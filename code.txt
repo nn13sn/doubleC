@@ -16,7 +16,7 @@ i = 0
 for(i->10){
 	for(y->10){
 		out(y)
-		out("\n")
 	}
+	out("\n")
 }
 

@@ -89,6 +89,23 @@ std::unique_ptr <Program> Parser::MakeBody(){
   return body;
 }
 
+Operator Parser::GetOperator(const std::string& op){
+  if(op == ">") return Operator::Greater;
+  else if(op == "<") return Operator::Less;
+  else if(op == "==") return Operator::Equal;
+  else if(op == ">=") return Operator::GreaterEq;
+  else if(op == "<=") return Operator::LessEq;
+  else if(op == "!=") return Operator::NotEqual;
+  else if(op == "*") return Operator::Mul;
+  else if(op == "/") return Operator::Div;
+  else if(op == "%") return Operator::Mod;
+  else if(op == "+") return Operator::Add;
+  else if(op =="-") return Operator::Sub;
+  else if(op == "->") return Operator::Arrow;
+  else if(op == "->=") return Operator::ArrowEq;
+  else return Operator::Invalid;
+}
+
 std::unique_ptr <Expression> Parser::SingleParse(){
     if(Check(TokenType::Number) || Check(TokenType::Double) || Check(TokenType::Boolean) || Check(TokenType::Symbol) || Check(TokenType::String)){
         auto expr = std::make_unique <exprValue> ();
@@ -133,13 +150,14 @@ std::unique_ptr <Expression> Parser::MakeExpression(){
   auto expr = ParseMidTerm();
 
   while(Check(">") || Check("<") || Check("==") || Check(">=") || Check("<=") || Check("!=")){
-    auto logic = std::make_unique <Logical> ();
-    logic -> location.line = peek().lineID;
-    logic -> location.column = peek().columnID;
-    logic -> op = advance().lexeme;
-    logic -> right = ParseMidTerm();
-    logic -> left = std::move(expr);
-    expr = std::move(logic);
+    auto bin = std::make_unique <Binary> ();
+    auto op = GetOperator(peek().lexeme);
+    bin -> location.line = peek().lineID;
+    bin -> location.column = advance().columnID;
+    bin -> op = op;
+    bin -> right = ParseMidTerm();
+    bin -> left = std::move(expr);
+    expr = std::move(bin);
   }
   return expr;
 }
@@ -149,9 +167,10 @@ std::unique_ptr <Expression> Parser::ParseTerm(){
 
     while(Check("*") || Check("/") || Check("%")){
         auto bin = std::make_unique <Binary> ();
+        auto op = GetOperator(peek().lexeme);
         bin->location.line = peek().lineID;
-        bin->location.column = peek().columnID;
-        bin->op = advance().lexeme[0];
+        bin->location.column = advance().columnID;
+        bin->op = op;
         bin->right = SingleParse();
         bin->left = std::move(expr);
         expr = std::move(bin);
@@ -164,9 +183,10 @@ std::unique_ptr <Expression> Parser::ParseMidTerm(){
 
     while(Check("+") || Check("-")){
         auto bin = std::make_unique <Binary> ();
+        auto op = GetOperator(peek().lexeme);
         bin->location.line = peek().lineID;
-        bin->location.column = peek().columnID;
-        bin->op = advance().lexeme[0];
+        bin->location.column = advance().columnID;
+        bin->op = op;
         bin->right = ParseTerm();
         bin->left = std::move(expr);
         expr = std::move(bin);
@@ -265,11 +285,11 @@ std::unique_ptr <Statement> Parser::ParseFor(){
     stmt->Initialvalue->value = MakeExpression();
   }
   if(Check("->")){
-    stmt->op = advance().lexeme;
-    if(Check("=")) stmt->op += advance().lexeme; 
+    stmt->op = GetOperator(advance().lexeme);
+    if(Check("=")) stmt->op = Operator::ArrowEq; 
   }
   else if (Check("!=") || Check(">") || Check("<") || Check("<=") || Check(">=")){
-    stmt->op = advance().lexeme;
+    stmt->op = GetOperator(advance().lexeme);
   }
   else SyntaxErr();
   stmt->Finalvalue = MakeExpression();

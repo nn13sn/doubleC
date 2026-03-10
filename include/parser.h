@@ -32,6 +32,7 @@ class Parser {
     Datatype getDatatype(const TokenType& tokentype);
     Datatype getDatatype(const Keyword& keyword);
     std::variant <int64_t, char, std::string, double, bool, std::vector <Value>> getData(); 
+    Operator GetOperator(const std::string& op);
     public:
     Parser(std::vector <std::vector <Token>>& T);
     void Parse(Program& program);

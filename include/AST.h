@@ -16,6 +16,24 @@ enum class Datatype{
     Invalid
 };
 
+enum class Operator{
+  Add,
+  Sub,
+  Mul,
+  Div,
+  Mod,
+
+  Less,
+  Greater,
+  LessEq,
+  GreaterEq,
+  Equal,
+  NotEqual,
+  Arrow,
+  ArrowEq,
+  Invalid
+};
+
 struct Value {
   Datatype type;
   std::variant <int64_t, char, std::string, double, bool, std::vector <Value> > data; 
@@ -68,7 +86,7 @@ struct While : Statement {
 };
 
 struct For : Statement {
-  std::string op;
+  Operator op;
   std::unique_ptr <Definition> step = nullptr;
   std::unique_ptr <Definition> Initialvalue = std::make_unique<Definition> ();
   std::unique_ptr <Expression> Finalvalue;
@@ -84,15 +102,9 @@ struct Variable : Expression {
 };
 
 struct Binary : Expression {
-    char op;
+    Operator op;
     std::unique_ptr <Expression> right;
     std::unique_ptr <Expression> left;
-};
-
-struct Logical : Expression {
-  std::unique_ptr <Expression> right;
-  std::unique_ptr <Expression> left;
-  std::string op;
 };
 
 struct Cast : Expression {

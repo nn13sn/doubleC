@@ -11,33 +11,31 @@ Value Interpreter::eval(const Expression& expr){
     if(auto b = findVar(a->name)) return *b;
     else throw interpreter_error("No such variable seems to be defined", a->location.line, a->location.column);
   }
-  else if (auto a = dynamic_cast<const Logical*> (&expr)){
-    try{
-    if(a->op == ">") return evalGr(eval(*(a->left)), eval(*(a -> right))); 
-    else if(a->op == "<") return evalLs(eval(*(a->left)), eval(*(a -> right)));
-    else if(a->op == "==") return evalEq(eval(*(a->left)), eval(*(a -> right)));
-    else if(a->op == "!=") return evalNq(eval(*(a->left)), eval(*(a -> right)));
-    else if(a->op == ">=") return evalGe(eval(*(a->left)), eval(*(a -> right)));
-    else if(a->op == "<=") return evalLe(eval(*(a->left)), eval(*(a -> right)));
-    else throw std::runtime_error("Invalid logical operator");
-    }
-    catch(const std::runtime_error& err){
-      throw interpreter_error(err.what(), a->location.line, a->location.column);
-    }
-  }
   else if (auto a = dynamic_cast<const Binary*> (&expr)) {
     try{
     switch(a->op){
-      case '+':
+      case Operator::Add:
         return evalAdd(eval(*(a->left)), eval(*(a->right)));
-      case '-':
+      case Operator::Sub:
         return evalSub(eval(*(a->left)), eval(*(a->right)));
-      case '*':
+      case Operator::Mul:
         return evalMul(eval(*(a->left)), eval(*(a->right)));
-      case '/':
+      case Operator::Div:
         return evalDiv(eval(*(a->left)), eval(*(a->right)));
-      case '%':
+      case Operator::Mod:
         return evalMod(eval(*(a->left)), eval(*(a->right)));
+      case Operator::Greater:
+        return evalGr(eval(*(a->left)), eval(*(a->right)));
+      case Operator::Less:
+        return evalLs(eval(*(a->left)), eval(*(a->right)));
+      case Operator::Equal:
+        return evalEq(eval(*(a->left)), eval(*(a->right)));
+      case Operator::NotEqual:
+        return evalNq(eval(*(a->left)), eval(*(a->right)));
+      case Operator::GreaterEq:
+        return evalGe(eval(*(a->left)), eval(*(a->right)));
+      case Operator::LessEq:
+        return evalLe(eval(*(a->left)), eval(*(a->right)));
       default:
         throw std::runtime_error("Invalid operator");
     }
@@ -358,38 +356,40 @@ void Interpreter::forloop(const For& stmt){
     Final = toInt(a);
    }
    else throw interpreter_error("The data type is not numerical", stmt.location.line);
-  if(stmt.op == "->"){
+  if(stmt.op == Operator::Arrow){
        if (toInt(*Initial) < Final) direction = 1;
   }
-  else if(stmt.op == "->="){
+  else if(stmt.op == Operator::ArrowEq){
       if (toInt(*Initial) <= Final) direction = 1;
   }
-  else if(stmt.op == ">" || stmt.op == "!=" || stmt.op == "<" || stmt.op == "<=" || stmt.op == ">="){
+  else if(stmt.op == Operator::Greater || stmt.op == Operator::NotEqual || stmt.op == Operator::Less || stmt.op == Operator::LessEq || stmt.op == Operator::GreaterEq){
     direction = 1;
   }
   else throw interpreter_error("Invalid operator", stmt.location.line);
-  if(stmt.op == "->"){
+  switch(stmt.op){
+    case Operator::Arrow:
       while((Final - toInt(*Initial)) * direction > 0){forbody(Initial, direction, stmt);}
-  }
-  else if(stmt.op == "->="){
+      break;
+    case Operator::ArrowEq:
       while((Final - toInt(*Initial)) * direction >= 0){forbody(Initial, direction, stmt);}
-  }
-  else if(stmt.op == "!="){
+      break;
+    case Operator::NotEqual:
       while(toInt(*Initial) != Final){forbody(Initial, direction, stmt);}
-  }
-  else if(stmt.op == ">"){
+      break;
+    case Operator::Greater:
       while(toInt(*Initial) > Final){forbody(Initial, direction, stmt);}
-  }
-  else if(stmt.op == "<"){
+      break;
+    case Operator::Less:
       while(toInt(*Initial) < Final){forbody(Initial, direction, stmt);}
-  }
-   else if(stmt.op == ">="){
+      break;
+    case Operator::GreaterEq:
       while(toInt(*Initial) >= Final){forbody(Initial, direction, stmt);}
-  }
-   else if(stmt.op == "<="){
+      break;
+    case Operator::LessEq:
       while(toInt(*Initial) <= Final){forbody(Initial, direction, stmt);}
+      break;
   }
-  variables.pop_back();
+ variables.pop_back();
 }
 
 void Interpreter::matchStatement(const Statement& stmt){
