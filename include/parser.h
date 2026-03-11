@@ -4,11 +4,14 @@
 #include <cstddef>
 #include "lexer.h"
 #include "AST.h"
+#define OPENBRACKET "Expected \"(\""
+#define CLOSEBRACKET "Expected \")\""
+#define CURLYBRACKET "Expected \"{\""
 class Parser {
     private:
     size_t line = 0;
     size_t pos = 0;
-    void SyntaxErr();
+    void SyntaxErr(const std::string& err);
     const Token& peek() const;
     Token& advance();
     std::vector <std::vector <Token>>& tokens;

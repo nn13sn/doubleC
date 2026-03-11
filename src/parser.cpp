@@ -15,8 +15,8 @@ bool Parser::isEnd(){
     return peek().type == TokenType::End;
 }
 
-void Parser::SyntaxErr(){
-    throw std::invalid_argument("Invalid Syntax at line: " + std::to_string(peek().lineID) + "; column: " + std::to_string(peek().columnID));
+void Parser::SyntaxErr(const std::string& err){
+    throw std::invalid_argument(err + " at line: " + std::to_string(peek().lineID) + "; column: " + std::to_string(peek().columnID));
 }
 
 bool Parser::Check(TokenType type){
@@ -75,10 +75,15 @@ std::unique_ptr <Program> Parser::MakeBody(){
  auto body = std::make_unique <Program> ();
    eatEnd();
   while(true){
+    if(line>=tokens.size()) {
+      line --;
+      pos = tokens[line].size()-1;
+      SyntaxErr("Expected \"}\"");
+    }
     if(Check("}")) break;
     body->statements.push_back(MakeStatement());
     if(Check("}")) break;
-    else if (!eatEnd() && pos!=0) SyntaxErr();
+    else if (!eatEnd() && pos!=0) SyntaxErr("End of the line is expected");
   }
   advance();
   if(isEnd()){
@@ -125,24 +130,24 @@ std::unique_ptr <Expression> Parser::SingleParse(){
     else if(Check(TokenType::Keyword)){
         auto expr = std::make_unique <Cast> ();
         expr->castTo = getDatatype(peek().keyword);
-        if(expr->castTo == Datatype::Invalid) SyntaxErr();
+        if(expr->castTo == Datatype::Invalid) SyntaxErr("A valid data type is expected");
         expr->location.line = peek().lineID;
         expr->location.column = advance().columnID;
         if(Check("(")) advance();
-        else SyntaxErr();
+        else SyntaxErr(OPENBRACKET);
         expr->expr = MakeExpression();
         if(Check(")")) advance();
-        else SyntaxErr();
+        else SyntaxErr(CLOSEBRACKET);
         return expr;
     }
     else if (Check("(")){
       advance();
       auto expr = MakeExpression();
       if(Check(")")) advance();
-      else SyntaxErr();
+      else SyntaxErr(CLOSEBRACKET);
       return expr;
     }
-    SyntaxErr();
+    SyntaxErr("Invalid component of the expression");
     return nullptr;
 }
 
@@ -198,10 +203,10 @@ std::unique_ptr <Statement> Parser::ParseInput(){
   auto stmt = std::make_unique <Input> ();
     stmt->location.line = advance().lineID;
     if(Check("(")) advance();
-    else SyntaxErr();
+    else SyntaxErr(OPENBRACKET);
     stmt->input = MakeExpression();
     if(Check(")")) advance();
-    else SyntaxErr();
+    else SyntaxErr(CLOSEBRACKET);
     return stmt;
 }
 
@@ -209,10 +214,10 @@ std::unique_ptr <Statement> Parser::ParseOutput(){
  auto stmt = std::make_unique<Output> ();
         stmt-> location.line = advance().lineID;
         if (Check("(")) advance();
-        else SyntaxErr();
+        else SyntaxErr(OPENBRACKET);
         stmt->output = MakeExpression();
         if (Check(")")) advance();
-        else SyntaxErr();
+        else SyntaxErr(CLOSEBRACKET);
         return stmt;
 }
 
@@ -220,7 +225,7 @@ std::unique_ptr <Statement> Parser::ParseDefinition(){
  auto stmt = std::make_unique<Definition> ();
         stmt->name = advance().lexeme;
         if (Check("=")) stmt-> location.line = advance().lineID;
-        else SyntaxErr();
+        else SyntaxErr("Expected \"=\"");
         stmt->value = MakeExpression();
         return stmt;
 }
@@ -229,13 +234,13 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
   auto stmt = std::make_unique<IfStatement> ();
   stmt -> location.line = advance().lineID;
   if(Check("(")) advance();
-  else SyntaxErr();
+  else SyntaxErr(OPENBRACKET);
   stmt -> expr = MakeExpression();
   if (Check(")")) advance();
-  else SyntaxErr();
+  else SyntaxErr(CLOSEBRACKET);
   eatEnd();
   if (Check("{")) advance();
-  else SyntaxErr();
+  else SyntaxErr(CURLYBRACKET);
   stmt->Instructions = MakeBody();
   if(Check(Keyword::Else)){
     stmt-> elseStatement = std::make_unique <IfStatement> ();
@@ -249,7 +254,7 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
     else if(Check(Keyword::If)){
       stmt->elseStatement.reset(static_cast <IfStatement*>(ParseIfStatement().release()));
     }
-    else SyntaxErr();
+    else SyntaxErr(CURLYBRACKET);
   }
   return stmt;
 }
@@ -258,13 +263,13 @@ std::unique_ptr <Statement> Parser::ParseWhile(){
   auto stmt = std::make_unique<While> ();
   stmt -> location.line = advance().lineID;
   if(Check("(")) advance();
-  else SyntaxErr();
+  else SyntaxErr(OPENBRACKET);
   stmt -> expr = MakeExpression();
   if(Check(")")) advance();
-  else SyntaxErr();
+  else SyntaxErr(CLOSEBRACKET);
   eatEnd();
   if(Check("{")) advance();
-  else SyntaxErr();
+  else SyntaxErr(CURLYBRACKET);
   stmt->Instructions = MakeBody();
   return stmt;
 }
@@ -273,13 +278,13 @@ std::unique_ptr <Statement> Parser::ParseFor(){
   auto stmt = std::make_unique <For> ();
   stmt -> location.line = advance().lineID;
   if(Check("(")) advance();
-  else SyntaxErr();
+  else SyntaxErr(OPENBRACKET);
   stmt->Initialvalue->value = nullptr;
   if(Check(TokenType::Identifier)) {
     stmt->Initialvalue->location.line = peek().lineID;
     stmt->Initialvalue->name = advance().lexeme;
   }
-  else SyntaxErr();
+  else SyntaxErr("Variable (iterator) is expected");
   if(Check("=")){
     advance();
     stmt->Initialvalue->value = MakeExpression();
@@ -291,18 +296,19 @@ std::unique_ptr <Statement> Parser::ParseFor(){
   else if (Check("!=") || Check(">") || Check("<") || Check("<=") || Check(">=")){
     stmt->op = GetOperator(advance().lexeme);
   }
-  else SyntaxErr();
+  else SyntaxErr("Invalid operator or not an operator");
   stmt->Finalvalue = MakeExpression();
   if(Check("(")){
     advance();
     if(Check(TokenType::Identifier)) stmt->step.reset(static_cast<Definition*> (ParseDefinition().release()));
     if(Check(")")) advance();
-    else SyntaxErr();
+    else SyntaxErr(CLOSEBRACKET);
   }
   if(Check(")")) advance();
+  else SyntaxErr(CLOSEBRACKET);
   eatEnd();
   if(Check("{")) advance();
-  else SyntaxErr();
+  else SyntaxErr(CURLYBRACKET);
   stmt->Instructions = MakeBody();
   return stmt;
 }
@@ -314,13 +320,13 @@ std::unique_ptr <Statement> Parser::MakeStatement(){
     else if(Check(Keyword::If)) return ParseIfStatement();
     else if(Check(Keyword::While)) return ParseWhile();
     else if(Check(Keyword::For)) return ParseFor();
-    SyntaxErr();
+    SyntaxErr("Cannot match the Syntax");
     return nullptr; 
 }
 
 void Parser::Parse(Program& program){
     while(line<tokens.size()){
          program.statements.push_back(MakeStatement());
-         if(!eatEnd() && pos!=0) SyntaxErr();
+         if(!eatEnd() && pos!=0) SyntaxErr("End of the line is expected");
     }
 }

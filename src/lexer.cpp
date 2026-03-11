@@ -86,21 +86,23 @@ bool Lexer::isDigit(){
 
 bool Lexer::isText(){
     if(Initialcode[i][pos] == '\''){
+      auto startpos = pos;
       pos++;
       if(Initialcode[i][pos] == '\\'){
         pos++;
         char c = getEscapes(Initialcode[i][pos]);
         if (c==-1) throw std::invalid_argument("Invalid Escape Sequence at line: " + std::to_string(i) + "; column: " + std::to_string(pos));
-        tokens.back().emplace_back(TokenType::Symbol, Keyword::amount,std::string(1,c), i + 1,pos + 1);
+        tokens.back().emplace_back(TokenType::Symbol, Keyword::amount,std::string(1,c), i + 1, startpos + 1);
       }
       else{
-        tokens.back().emplace_back(TokenType::Symbol, Keyword::amount, std::string(1,Initialcode[i][pos]), i + 1, pos + 1);
+        tokens.back().emplace_back(TokenType::Symbol, Keyword::amount, std::string(1,Initialcode[i][pos]), i + 1, startpos + 1);
       }
       if(Initialcode[i][++pos] !='\'') throw std::invalid_argument("Invalid argument for char, at line: " + std::to_string(i) + "; column: " + std::to_string(pos));
       return true;
     }
     else if (Initialcode[i][pos] == '"'){
       std::string str = "";
+      auto startpos = pos;
       pos++;
       while(Initialcode[i][pos] != '"'){
        if(Initialcode[i][pos] == '\\') str+=getEscapes(Initialcode[i][++pos]);
@@ -108,7 +110,7 @@ bool Lexer::isText(){
        pos++;
        unexEnd();
       }
-      tokens.back().emplace_back(TokenType::String, Keyword::amount, str, i + 1, pos + 1);
+      tokens.back().emplace_back(TokenType::String, Keyword::amount, str, i + 1, startpos + 1);
       return true;
     }
     return false;
@@ -167,7 +169,7 @@ std::vector <std::vector <Token>> Lexer::Tokenize(){
       else if (isSeparator()) continue;
       else throw std::invalid_argument("Invalid symbol at line " + std::to_string(i) + "; column: " + std::to_string(pos));
     }
-    tokens.back().emplace_back(TokenType::End, Keyword::amount, "", i + 1, Initialcode[i].size());
+    tokens.back().emplace_back(TokenType::End, Keyword::amount, "", i + 1, Initialcode[i].size() + 1);
    }
     return tokens;
 }
