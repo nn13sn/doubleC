@@ -2,20 +2,20 @@ cmake_minimum_required(VERSION 3.16)
 
 project(DoubleC LANGUAGES CXX)
 
-add_executable(interpreterA
+add_executable(DoubleC
     src/main.cpp
     src/lexer.cpp
     src/parser.cpp
     src/interpreter.cpp
 )
 
-target_compile_features(interpreterA PRIVATE cxx_std_20)
+target_compile_features(DoubleC PRIVATE cxx_std_20)
 
-target_compile_options(interpreterA PRIVATE
+target_compile_options(DoubleC PRIVATE
     -Wall
     -Wextra
     -g
     -O0
 )
 
-target_include_directories(interpreterA PRIVATE include)
+target_include_directories(DoubleC PRIVATE include)

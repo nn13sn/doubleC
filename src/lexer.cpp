@@ -8,6 +8,10 @@ void Lexer::readFile(std::string name){
       Initialcode.push_back(line);
     }
   }
+  else{
+    std::cout << "Cannot open/find such file\n";
+    std::exit(1);
+  }
 }
 
 Token::Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t lineID, size_t columnID){
