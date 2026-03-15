@@ -28,7 +28,15 @@ bool Parser::Check(std::string lexeme){
 }
 
 bool Parser::Check(Keyword keyword){
-    return keyword == peek().keyword;
+    return peek().type == TokenType::Keyword && static_cast<uint8_t> (keyword) == peek().value;
+}
+
+bool Parser::Check(Operator op){
+  return peek().type == TokenType::Operator && static_cast <uint8_t> (op) == peek().value;
+}
+
+bool Parser::Check(Separator sep){
+  return peek().type == TokenType::Separator && static_cast <uint8_t> (sep) == peek().value;
 }
 
 bool Parser::eatEnd(){
@@ -80,9 +88,9 @@ std::unique_ptr <Program> Parser::MakeBody(){
       pos = tokens[line].size()-1;
       SyntaxErr("Expected \"}\"");
     }
-    if(Check("}")) break;
+    if(Check(Separator::RightCurlyBracket)) break;
     body->statements.push_back(MakeStatement());
-    if(Check("}")) break;
+    if(Check(Separator::RightCurlyBracket)) break;
     else if (!eatEnd() && pos!=0) SyntaxErr("End of the line is expected");
   }
   advance();
@@ -92,23 +100,6 @@ std::unique_ptr <Program> Parser::MakeBody(){
    pos=0;
   }
   return body;
-}
-
-Operator Parser::GetOperator(const std::string& op){
-  if(op == ">") return Operator::Greater;
-  else if(op == "<") return Operator::Less;
-  else if(op == "==") return Operator::Equal;
-  else if(op == ">=") return Operator::GreaterEq;
-  else if(op == "<=") return Operator::LessEq;
-  else if(op == "!=") return Operator::NotEqual;
-  else if(op == "*") return Operator::Mul;
-  else if(op == "/") return Operator::Div;
-  else if(op == "%") return Operator::Mod;
-  else if(op == "+") return Operator::Add;
-  else if(op =="-") return Operator::Sub;
-  else if(op == "->") return Operator::Arrow;
-  else if(op == "->=") return Operator::ArrowEq;
-  else return Operator::Invalid;
 }
 
 std::unique_ptr <Expression> Parser::SingleParse(){
@@ -129,22 +120,22 @@ std::unique_ptr <Expression> Parser::SingleParse(){
     }
     else if(Check(TokenType::Keyword)){
         auto expr = std::make_unique <Cast> ();
-        expr->castTo = getDatatype(peek().keyword);
+        expr->castTo = getDatatype(static_cast <Keyword> (peek().value));
         if(expr->castTo == Datatype::Invalid) SyntaxErr("A valid data type is expected");
         expr->location.line = peek().lineID;
         expr->location.column = advance().columnID;
-        if(Check("(")) advance();
-        else SyntaxErr(OPENBRACKET);
+        if(Check(Separator::LeftParenthesis)) advance();
+        else SyntaxErr(OPENPARENTHESIS);
         expr->expr = MakeExpression();
-        if(Check(")")) advance();
-        else SyntaxErr(CLOSEBRACKET);
+        if(Check(Separator::RightParenthesis)) advance();
+        else SyntaxErr(CLOSEPARENTHESIS);
         return expr;
     }
-    else if (Check("(")){
+    else if (Check(Separator::LeftParenthesis)){
       advance();
       auto expr = MakeExpression();
-      if(Check(")")) advance();
-      else SyntaxErr(CLOSEBRACKET);
+      if(Check(Separator::RightParenthesis)) advance();
+      else SyntaxErr(CLOSEPARENTHESIS);
       return expr;
     }
     SyntaxErr("Invalid component of the expression");
@@ -154,9 +145,9 @@ std::unique_ptr <Expression> Parser::SingleParse(){
 std::unique_ptr <Expression> Parser::MakeExpression(){
   auto expr = ParseMidTerm();
 
-  while(Check(">") || Check("<") || Check("==") || Check(">=") || Check("<=") || Check("!=")){
+  while(Check(Operator::Greater) || Check(Operator::Less) || Check(Operator::Equal) || Check(Operator::GreaterEq) || Check(Operator::LessEq) || Check(Operator::NotEqual)){
     auto bin = std::make_unique <Binary> ();
-    auto op = GetOperator(peek().lexeme);
+    auto op = static_cast<Operator> (peek().value);
     bin -> location.line = peek().lineID;
     bin -> location.column = advance().columnID;
     bin -> op = op;
@@ -170,9 +161,9 @@ std::unique_ptr <Expression> Parser::MakeExpression(){
 std::unique_ptr <Expression> Parser::ParseTerm(){
     auto expr = SingleParse();
 
-    while(Check("*") || Check("/") || Check("%")){
+    while(Check(Operator::Mul) || Check(Operator::Div) || Check(Operator::Mod)){
         auto bin = std::make_unique <Binary> ();
-        auto op = GetOperator(peek().lexeme);
+        auto op = static_cast <Operator> (peek().value);
         bin->location.line = peek().lineID;
         bin->location.column = advance().columnID;
         bin->op = op;
@@ -186,9 +177,9 @@ std::unique_ptr <Expression> Parser::ParseTerm(){
 std::unique_ptr <Expression> Parser::ParseMidTerm(){
     auto expr = ParseTerm();
 
-    while(Check("+") || Check("-")){
+    while(Check(Operator::Add) || Check(Operator::Sub)){
         auto bin = std::make_unique <Binary> ();
-        auto op = GetOperator(peek().lexeme);
+        auto op = static_cast<Operator> (peek().value);
         bin->location.line = peek().lineID;
         bin->location.column = advance().columnID;
         bin->op = op;
@@ -202,29 +193,29 @@ std::unique_ptr <Expression> Parser::ParseMidTerm(){
 std::unique_ptr <Statement> Parser::ParseInput(){
   auto stmt = std::make_unique <Input> ();
     stmt->location.line = advance().lineID;
-    if(Check("(")) advance();
-    else SyntaxErr(OPENBRACKET);
+    if(Check(Separator::LeftParenthesis)) advance();
+    else SyntaxErr(OPENPARENTHESIS);
     stmt->input = MakeExpression();
-    if(Check(")")) advance();
-    else SyntaxErr(CLOSEBRACKET);
+    if(Check(Separator::RightParenthesis)) advance();
+    else SyntaxErr(CLOSEPARENTHESIS);
     return stmt;
 }
 
 std::unique_ptr <Statement> Parser::ParseOutput(){
  auto stmt = std::make_unique<Output> ();
         stmt-> location.line = advance().lineID;
-        if (Check("(")) advance();
-        else SyntaxErr(OPENBRACKET);
+        if (Check(Separator::LeftParenthesis)) advance();
+        else SyntaxErr(OPENPARENTHESIS);
         stmt->output = MakeExpression();
-        if (Check(")")) advance();
-        else SyntaxErr(CLOSEBRACKET);
+        if (Check(Separator::RightParenthesis)) advance();
+        else SyntaxErr(CLOSEPARENTHESIS);
         return stmt;
 }
 
 std::unique_ptr <Statement> Parser::ParseDefinition(){
  auto stmt = std::make_unique<Definition> ();
         stmt->name = advance().lexeme;
-        if (Check("=")) stmt-> location.line = advance().lineID;
+        if (Check(Operator::Def)) stmt-> location.line = advance().lineID;
         else SyntaxErr("Expected \"=\"");
         stmt->value = MakeExpression();
         return stmt;
@@ -233,20 +224,20 @@ std::unique_ptr <Statement> Parser::ParseDefinition(){
 std::unique_ptr <Statement> Parser::ParseIfStatement(){
   auto stmt = std::make_unique<IfStatement> ();
   stmt -> location.line = advance().lineID;
-  if(Check("(")) advance();
-  else SyntaxErr(OPENBRACKET);
+  if(Check(Separator::LeftParenthesis)) advance();
+  else SyntaxErr(OPENPARENTHESIS);
   stmt -> expr = MakeExpression();
-  if (Check(")")) advance();
-  else SyntaxErr(CLOSEBRACKET);
+  if (Check(Separator::RightParenthesis)) advance();
+  else SyntaxErr(CLOSEPARENTHESIS);
   eatEnd();
-  if (Check("{")) advance();
-  else SyntaxErr(CURLYBRACKET);
+  if (Check(Separator::LeftCurlyBracket)) advance();
+  else SyntaxErr(OPENCURLYBRACKET);
   stmt->Instructions = MakeBody();
   if(Check(Keyword::Else)){
     stmt-> elseStatement = std::make_unique <IfStatement> ();
     stmt-> location.line = advance().lineID; 
     eatEnd();
-    if (Check("{")) {
+    if (Check(Separator::LeftCurlyBracket)) {
       advance();
       stmt->elseStatement->expr = nullptr;
       stmt->elseStatement->Instructions = MakeBody();
@@ -254,7 +245,7 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
     else if(Check(Keyword::If)){
       stmt->elseStatement.reset(static_cast <IfStatement*>(ParseIfStatement().release()));
     }
-    else SyntaxErr(CURLYBRACKET);
+    else SyntaxErr(OPENCURLYBRACKET);
   }
   return stmt;
 }
@@ -262,14 +253,14 @@ std::unique_ptr <Statement> Parser::ParseIfStatement(){
 std::unique_ptr <Statement> Parser::ParseWhile(){
   auto stmt = std::make_unique<While> ();
   stmt -> location.line = advance().lineID;
-  if(Check("(")) advance();
-  else SyntaxErr(OPENBRACKET);
+  if(Check(Separator::LeftParenthesis)) advance();
+  else SyntaxErr(OPENPARENTHESIS);
   stmt -> expr = MakeExpression();
-  if(Check(")")) advance();
-  else SyntaxErr(CLOSEBRACKET);
+  if(Check(Separator::RightParenthesis)) advance();
+  else SyntaxErr(CLOSEPARENTHESIS);
   eatEnd();
-  if(Check("{")) advance();
-  else SyntaxErr(CURLYBRACKET);
+  if(Check(Separator::LeftCurlyBracket)) advance();
+  else SyntaxErr(OPENCURLYBRACKET);
   stmt->Instructions = MakeBody();
   return stmt;
 }
@@ -277,38 +268,35 @@ std::unique_ptr <Statement> Parser::ParseWhile(){
 std::unique_ptr <Statement> Parser::ParseFor(){
   auto stmt = std::make_unique <For> ();
   stmt -> location.line = advance().lineID;
-  if(Check("(")) advance();
-  else SyntaxErr(OPENBRACKET);
+  if(Check(Separator::LeftParenthesis)) advance();
+  else SyntaxErr(OPENPARENTHESIS);
   stmt->Initialvalue->value = nullptr;
   if(Check(TokenType::Identifier)) {
     stmt->Initialvalue->location.line = peek().lineID;
     stmt->Initialvalue->name = advance().lexeme;
   }
   else SyntaxErr("Variable (iterator) is expected");
-  if(Check("=")){
+  if(Check(Operator::Def)){
     advance();
     stmt->Initialvalue->value = MakeExpression();
   }
-  if(Check("->")){
-    stmt->op = GetOperator(advance().lexeme);
-    if(Check("=")) stmt->op = Operator::ArrowEq; 
-  }
-  else if (Check("!=") || Check(">") || Check("<") || Check("<=") || Check(">=")){
-    stmt->op = GetOperator(advance().lexeme);
+  if (Check(Operator::Arrow) || Check(Operator::ArrowEq) || Check(Operator::NotEqual) || Check(Operator::Greater) || Check(Operator::Less)
+    || Check(Operator::LessEq) || Check(Operator::GreaterEq)){
+    stmt->op = static_cast <Operator> (advance().value);
   }
   else SyntaxErr("Invalid operator or not an operator");
   stmt->Finalvalue = MakeExpression();
-  if(Check("(")){
+  if(Check(Separator::LeftParenthesis)){
     advance();
     if(Check(TokenType::Identifier)) stmt->step.reset(static_cast<Definition*> (ParseDefinition().release()));
-    if(Check(")")) advance();
-    else SyntaxErr(CLOSEBRACKET);
+    if(Check(Separator::RightParenthesis)) advance();
+    else SyntaxErr(CLOSEPARENTHESIS);
   }
-  if(Check(")")) advance();
-  else SyntaxErr(CLOSEBRACKET);
+  if(Check(Separator::RightParenthesis)) advance();
+  else SyntaxErr(CLOSEPARENTHESIS);
   eatEnd();
-  if(Check("{")) advance();
-  else SyntaxErr(CURLYBRACKET);
+  if(Check(Separator::LeftCurlyBracket)) advance();
+  else SyntaxErr(OPENCURLYBRACKET);
   stmt->Instructions = MakeBody();
   return stmt;
 }

@@ -8,8 +8,9 @@
 #include <cstdint>
 #include <stdexcept>
 #include <fstream>
+#include "AST.h"
 
-enum class TokenType{
+enum class TokenType : uint8_t {
     Identifier,
     Keyword,
     Number,
@@ -37,23 +38,23 @@ enum class Keyword : uint8_t {
     String,
     While,
     For,
-    amount
+    Invalid
 };
 
 struct Token{
     TokenType type;
-    Keyword keyword;
+    uint8_t value;
     std::string lexeme;
     size_t lineID;
     size_t columnID;
-    Token(TokenType type, const Keyword& keyword, std::string lexeme,size_t lineID, size_t columnID);
+    Token(TokenType type, const uint8_t& value, std::string lexeme,size_t lineID, size_t columnID);
 };
 
 class Lexer{
-  static constexpr std::array <std::string_view, static_cast <size_t> (Keyword::amount)> keywords {
+  static constexpr std::array <std::string_view, static_cast <size_t> (Keyword::Invalid)> keywords {
         "if", "else", "true", "false", "in", "out","double", "int", "char", "bool", "string", "while", "for"
   };
-  Keyword IsKeyword(const std::string_view lexeme);
+  uint8_t IsKeyword(const std::string_view lexeme);
   std::vector <std::string> Initialcode;
   std::vector <std::vector <Token>> tokens;
   size_t i;

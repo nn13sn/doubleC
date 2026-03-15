@@ -6,7 +6,7 @@
 #include <variant>
 #include <cstdint>
 
-enum class Datatype{
+enum class Datatype : uint8_t {
     Int,
     Char,
     String,
@@ -16,21 +16,36 @@ enum class Datatype{
     Invalid
 };
 
-enum class Operator{
+enum class Operator : uint8_t {
   Add,
   Sub,
   Mul,
   Div,
   Mod,
-
+  
+  Not,
   Less,
   Greater,
   LessEq,
   GreaterEq,
   Equal,
   NotEqual,
+
+  Def, 
   Arrow,
   ArrowEq,
+  Invalid
+};
+
+enum class Separator : uint8_t {
+  LeftParenthesis,
+  RightParenthesis,
+  Colon,
+  Semicolon,
+  LeftSquareBracket,
+  RightSquareBracket,
+  LeftCurlyBracket,
+  RightCurlyBracket,
   Invalid
 };
 

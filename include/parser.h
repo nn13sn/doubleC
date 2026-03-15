@@ -4,9 +4,9 @@
 #include <cstddef>
 #include "lexer.h"
 #include "AST.h"
-#define OPENBRACKET "Expected \"(\""
-#define CLOSEBRACKET "Expected \")\""
-#define CURLYBRACKET "Expected \"{\""
+#define OPENPARENTHESIS "Expected \"(\""
+#define CLOSEPARENTHESIS "Expected \")\""
+#define OPENCURLYBRACKET "Expected \"{\""
 class Parser {
     private:
     size_t line = 0;
@@ -30,12 +30,13 @@ class Parser {
     bool Check(TokenType type);
     bool Check(std::string lexeme);
     bool Check(Keyword keyword);
+    bool Check(Operator op);
+    bool Check(Separator sep);
     bool isEnd();
     bool eatEnd();
     Datatype getDatatype(const TokenType& tokentype);
     Datatype getDatatype(const Keyword& keyword);
     std::variant <int64_t, char, std::string, double, bool, std::vector <Value>> getData(); 
-    Operator GetOperator(const std::string& op);
     public:
     Parser(std::vector <std::vector <Token>>& T);
     void Parse(Program& program);

@@ -7,10 +7,10 @@
 int main(int argc, char* argv[]){
   try{
     if(argc == 1) {
-      std::cout << "The path is expected to be provided\n";
-      return -4;
+      //std::cout << "The path is expected to be provided\n";
+      //return -4;
     }
-    std::string path = argv[1];
+    std::string path = "ExampleCode.txt";
     Program program;
     Lexer lexer;
     lexer.readFile(path);
