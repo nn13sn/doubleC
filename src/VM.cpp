@@ -93,6 +93,11 @@ signed char VM::evaluate(const Bytecode &code) {
       case Action::Load_Local:
         stack.Push(env->get(instruction.operand).get());
         break;
+      case Action::DefaultInit:
+        if (env->getPointer(instruction.operand)->get().getType() ==
+            Datatype::Invalid)
+          env->set(instruction.operand, RuntimeValue(Datatype::Int, 0), 0);
+        break;
       case Action::Read:
         stack.Push(RuntimeStreams::ReadValue(
             static_cast<Datatype>(instruction.operand)));
@@ -106,6 +111,52 @@ signed char VM::evaluate(const Bytecode &code) {
         break;
       case Action::Jump:
         instruction_number = instruction.operand;
+        break;
+      case Action::ForInit:
+        ForStates.push_back(ForState());
+        ForStates.back().iterator = instruction.operand >> 2;
+        ForStates.back().end = stack.Top();
+        if ((instruction.operand & 0b11) == 1)
+          ForStates.back().inclusive = false;
+        else if ((instruction.operand & 0b11) == 2)
+          ForStates.back().inclusive = true;
+        else {
+          stack.Pop(); // deleting start and the end because forcheck will push
+                       // them again
+          stack.Pop();
+          break;
+        }
+        BinaryOperation(RuntimeOperations::LessEq);
+        RuntimeCast::As<bool>(stack.Pop()) ? ForStates.back().direction = 1
+                                           : ForStates.back().direction = 0;
+        break;
+      case Action::ForCheck:
+        stack.Push(env->get(ForStates.back().iterator).get());
+        stack.Push(ForStates.back().end);
+        if (ForStates.back().direction == 2)
+          break;
+        else if (ForStates.back().direction == 1) {
+          if (ForStates.back().inclusive)
+            BinaryOperation(RuntimeOperations::LessEq);
+          else
+            BinaryOperation(RuntimeOperations::Less);
+        } else {
+          if (ForStates.back().inclusive)
+            BinaryOperation(RuntimeOperations::GreaterEq);
+          else
+            BinaryOperation(RuntimeOperations::Greater);
+        }
+        break;
+      case Action::ForStep:
+        if (ForStates.back().direction == 0)
+          RuntimeOperations::PreDecr(
+              *env->getPointer(ForStates.back().iterator));
+        else
+          RuntimeOperations::PreIncr(
+              *env->getPointer(ForStates.back().iterator));
+        break;
+      case Action::ForEnd:
+        ForStates.pop_back();
         break;
       case Action::EnterScope:
         env->enterScope();

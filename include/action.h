@@ -36,6 +36,12 @@ enum class Action : uint8_t {
   Jump,
   JumpIfFalse,
 
+  DefaultInit,
+  ForInit,
+  ForCheck,
+  ForStep,
+  ForEnd,
+
   EnterScope,
   ExitScope
 };

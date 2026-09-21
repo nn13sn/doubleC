@@ -101,6 +101,53 @@ void Generator::GenerateIf(const IfStatement &stmt) {
   }
 }
 
+void Generator::GenerateWhile(const While &stmt) {
+  size_t loopstart = code.code.size();
+  GenerateExpression(*stmt.expr);
+  auto jump = emit(stmt.location, Action::JumpIfFalse);
+  GenerateBody(*stmt.Instructions);
+  emit(stmt.location, Action::Jump, loopstart);
+  FinishJump(jump, code.code.size());
+}
+
+void Generator::GenerateFor(const For &stmt) {
+  emit(stmt.location, Action::EnterScope);
+  if (stmt.Initialvalue) {
+    GenerateExpression(*stmt.Initialvalue);
+    emit(stmt.location, Action::Store_Local,
+         indexes.slots[indexes.IDs[stmt.iterator.id]]);
+  } else {
+    emit(stmt.location, Action::DefaultInit,
+         indexes.slots[indexes.IDs[stmt.iterator.id]]);
+    emit(stmt.location, Action::Load_Local,
+         indexes.slots[indexes.IDs[stmt.iterator.id]]);
+  }
+
+  GenerateExpression(*stmt.Finalvalue);
+  if (!utils::isArrow(stmt.op))
+    emit(stmt.location, Action::ForInit,
+         (indexes.slots[indexes.IDs[stmt.iterator.id]] << 2) | 0);
+  else
+    emit(stmt.location, Action::ForInit,
+         stmt.op == Operator::Arrow
+             ? (indexes.slots[indexes.IDs[stmt.iterator.id]] << 2) | 1
+             : (indexes.slots[indexes.IDs[stmt.iterator.id]] << 2) | 2);
+  auto loopstart = code.code.size();
+  emit(stmt.location, Action::ForCheck);
+  if (!utils::isArrow(stmt.op))
+    emit(stmt.location, utils::getOperatorAction(stmt.op));
+  auto jump = emit(stmt.location, Action::JumpIfFalse);
+  GenerateBody(*stmt.Instructions);
+  if (stmt.step) {
+    GenerateExpression(*stmt.step);
+  } else
+    emit(stmt.location, Action::ForStep);
+  emit(stmt.location, Action::Jump, loopstart);
+  FinishJump(jump, code.code.size());
+  emit(stmt.location, Action::ForEnd);
+  emit(stmt.location, Action::ExitScope);
+}
+
 const Bytecode &Generator::Generate(const Program &program) {
   for (const auto &stmt : program.statements) {
     switch (stmt->StatementType) {
@@ -117,6 +164,12 @@ const Bytecode &Generator::Generate(const Program &program) {
       break;
     case StmtType::IfStatement:
       GenerateIf(static_cast<const IfStatement &>(*stmt));
+      break;
+    case StmtType::While:
+      GenerateWhile(static_cast<const While &>(*stmt));
+      break;
+    case StmtType::For:
+      GenerateFor(static_cast<const For &>(*stmt));
       break;
     default:
       break;

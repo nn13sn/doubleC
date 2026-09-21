@@ -45,6 +45,13 @@ struct Expression : AST {
   ExprType ExpressionType;
 };
 
+struct Variable : Expression {
+  std::string name;
+  Variable() : id(amount++) {}
+  inline static uint32_t amount = 0;
+  uint32_t id;
+};
+
 struct Program : AST {
   std::vector<std::unique_ptr<Statement>> statements;
 };
@@ -74,7 +81,7 @@ struct While : Statement {
 };
 
 struct For : Statement {
-  std::string iterator;
+  Variable iterator;
   Operator op;
   std::unique_ptr<Expression> step = nullptr;
   std::unique_ptr<Expression> Initialvalue;
@@ -113,13 +120,6 @@ enum class ExprType {
 
 struct exprValue : Expression {
   Literal value;
-};
-
-struct Variable : Expression {
-  std::string name;
-  Variable() : id(amount++) {}
-  inline static uint32_t amount = 0;
-  uint32_t id;
 };
 
 struct FunctionCall : Expression {

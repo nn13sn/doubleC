@@ -1,6 +1,7 @@
 #pragma once
 #include "bytecode.h"
 #include "environment.h"
+#include "forstate.h"
 #include "runtime_variable.h"
 #include "stack.h"
 #define VM_ERROR -1
@@ -13,6 +14,7 @@ public:
 private:
   Stack stack;
   std::shared_ptr<Environment> env;
+  std::vector<ForState> ForStates = {};
   size_t instruction_number = 0;
   void Add();
   void Sub();

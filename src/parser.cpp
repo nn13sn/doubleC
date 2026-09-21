@@ -460,7 +460,7 @@ std::unique_ptr<Statement> Parser::ParseFor() {
   else
     SyntaxErr(OPENPARENTHESIS);
   if (Check(TokenType::Identifier)) {
-    stmt->iterator = advance().lexeme;
+    stmt->iterator.name = advance().lexeme;
   } else
     SyntaxErr("Variable (iterator) is expected");
   if (Check(Operator::Def)) {

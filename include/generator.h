@@ -13,6 +13,8 @@ private:
   void GenerateOutput(const Output &stmt);
   void GenerateInput(const Input &stmt);
   void GenerateIf(const IfStatement &stmt);
+  void GenerateWhile(const While &stmt);
+  void GenerateFor(const For &stmt);
   Bytecode code;
   uint32_t index = 0;
 

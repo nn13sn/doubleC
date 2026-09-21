@@ -65,8 +65,9 @@ void Analyzer::AnalyzeUnary(const Unary &expr) {
                         expr.location));
     }
     AnalyzeExpression(*expr.expr);
-    env->exists(static_cast<const Variable &>(*expr.expr).name)
-        ->isallowed(MOD_NONE, errors, expr.location);
+    if (env->exists(static_cast<const Variable &>(*expr.expr).name))
+      env->exists(static_cast<const Variable &>(*expr.expr).name)
+          ->isallowed(MOD_NONE, errors, expr.location);
     return;
   case Operator::PreDecr:
   case Operator::PostDecr:
@@ -76,8 +77,9 @@ void Analyzer::AnalyzeUnary(const Unary &expr) {
                         expr.location));
     }
     AnalyzeExpression(*expr.expr);
-    env->exists(static_cast<const Variable &>(*expr.expr).name)
-        ->isallowed(MOD_NONE, errors, expr.location);
+    if (env->exists(static_cast<const Variable &>(*expr.expr).name))
+      env->exists(static_cast<const Variable &>(*expr.expr).name)
+          ->isallowed(MOD_NONE, errors, expr.location);
     return;
   default:
     return AnalyzeExpression(*expr.expr);
@@ -127,18 +129,18 @@ void Analyzer::AnalyzeFor(const For &stmt) {
   bool prev = insideLoop;
   insideLoop = true;
   newScope();
-  env->Define(0, stmt.iterator, errors, stmt.location);
-  auto iterator = env->exists(stmt.iterator);
-  if (!utils::isDynamic(stmt.mods))
-    iterator->lock();
+  env->Define(0, stmt.iterator.name, errors, stmt.location);
+  // auto iterator = env->exists(stmt.iterator.name);
+  //  if (!utils::isDynamic(stmt.mods))
+  //  iterator->lock();
   if (stmt.Initialvalue)
     AnalyzeExpression(*stmt.Initialvalue);
   AnalyzeExpression(*stmt.Finalvalue);
   if (stmt.step)
     AnalyzeExpression(*stmt.step);
   analyze(*stmt.Instructions);
-  if (!utils::isDynamic(stmt.mods))
-    iterator->unlock();
+  // if (!utils::isDynamic(stmt.mods))
+  // iterator->unlock();
   removeScope();
   insideLoop = prev;
 }
