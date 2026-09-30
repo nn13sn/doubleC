@@ -1,4 +1,5 @@
 #pragma once
+#include "ASTexpressions.h"
 #include "datatype.h"
 #include "funcparameter.h"
 #include "literal.h"
@@ -11,8 +12,6 @@
 #include <variant>
 #include <vector>
 #define MAX_ERROR_NUMBER 20
-
-enum class ExprType;
 
 enum Modifiers { MOD_NONE = 0, MOD_GLOBAL = 1, MOD_DYNAMIC = 2, MOD_CONST = 4 };
 
@@ -31,25 +30,9 @@ enum class StmtType {
   Amount
 };
 
-struct AST {
-  Location location;
-  virtual ~AST() = default;
-};
-
 struct Statement : AST {
   StmtType StatementType;
   int32_t mods = MOD_NONE;
-};
-
-struct Expression : AST {
-  ExprType ExpressionType;
-};
-
-struct Variable : Expression {
-  std::string name;
-  Variable() : id(amount++) {}
-  inline static uint32_t amount = 0;
-  uint32_t id;
 };
 
 struct Program : AST {
@@ -94,6 +77,9 @@ struct BreakStmt : Statement {};
 struct ContinueStmt : Statement {};
 
 struct FunctionStatement : Statement {
+  FunctionStatement() : id(amount++) {}
+  inline static uint32_t amount = 0;
+  uint32_t id;
   std::string name;
   std::vector<Parameter> params = {};
   std::unique_ptr<Program> Instructions;
@@ -105,45 +91,4 @@ struct ReturnStatement : Statement {
 
 struct BlockStatement : Statement {
   std::unique_ptr<Program> instructions;
-};
-
-enum class ExprType {
-  exprValue,
-  Variable,
-  FunctionCall,
-  Binary,
-  Assignment,
-  Unary,
-  Cast,
-  Amount
-};
-
-struct exprValue : Expression {
-  Literal value;
-};
-
-struct FunctionCall : Expression {
-  std::string name;
-  std::vector<std::unique_ptr<Expression>> parameters = {};
-};
-
-struct Binary : Expression {
-  Operator op;
-  std::unique_ptr<Expression> right;
-  std::unique_ptr<Expression> left;
-};
-
-struct Assignment : Expression {
-  std::unique_ptr<Expression> right;
-  std::unique_ptr<Expression> left;
-};
-
-struct Unary : Expression {
-  Operator op;
-  std::unique_ptr<Expression> expr;
-};
-
-struct Cast : Expression {
-  Datatype castTo;
-  std::unique_ptr<Expression> expr;
 };

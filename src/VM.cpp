@@ -1,10 +1,16 @@
 #include "VM.h"
+#include "callstate.h"
+#include "functionenv.h"
 #include "runtime_cast.h"
 #include "runtime_operations.h"
 #include "runtime_streams.h"
 #include "vm_error.h"
 
-VM::VM(const uint32_t &size) { env = std::make_shared<Environment>(size); }
+VM::VM(const uint32_t &size, const size_t &funcsize) {
+  env = std::make_shared<Environment>(size);
+  FuncEnv->GeneralSize = funcsize;
+  FuncEnv->functions.resize(funcsize);
+}
 
 template <typename OperationFunc> void VM::BinaryOperation(OperationFunc func) {
   auto right = stack.Pop();
@@ -18,6 +24,7 @@ template <typename OperationFunc> void VM::UnaryOperation(OperationFunc func) {
 }
 
 signed char VM::evaluate(const Bytecode &code) {
+
   try {
     while (instruction_number < code.code.size()) {
       const Instruction &instruction = code.code[instruction_number++];
@@ -158,12 +165,29 @@ signed char VM::evaluate(const Bytecode &code) {
       case Action::ForEnd:
         ForStates.pop_back();
         break;
+      case Action::PushFunction:
+        FuncEnv->functions[code.functionsinfo[instruction.operand].slot] =
+            code.functionsinfo[instruction.operand];
+        break;
+      case Action::CallFunction:
+        CallStates.push_back(CallState{instruction_number + 1});
+        instruction_number = FuncEnv->functions[instruction.operand].entry;
+        break;
+      case Action::Return:
+        instruction_number = CallStates.back().returnPoint;
+        CallStates.pop_back();
+        stack.Push(RuntimeValue(Datatype::Int, 0));
+        break;
       case Action::EnterScope:
         env->enterScope();
+        FuncEnv->EnterScope();
         break;
       case Action::ExitScope:
         env->exitScope();
+        FuncEnv->ExitScope();
         break;
+      case Action::Halt:
+        return VM_OK;
       default:
         throw VM_error("Unknown instruction");
       }

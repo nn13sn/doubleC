@@ -1,4 +1,6 @@
 #pragma once
+#include "AST.h"
+#include "analyzer_function.h"
 #include "analyzer_variable.h"
 #include "slot_table.h"
 #include "utils.h"
@@ -16,6 +18,7 @@ struct AnalyzerEnv {
 
   std::unordered_map<std::string, AnalyzerVariable> variables = {};
   inline static std::unordered_map<std::string, AnalyzerVariable> globals = {};
+  std::unordered_map<std::string, Analyzer_function> Functions = {};
   AnalyzerEnv *parent = nullptr;
   Slot_Table *table;
 
@@ -32,6 +35,28 @@ struct AnalyzerEnv {
       globals.insert({name, AnalyzerVariable(mods, table->IDs.size() - 1)});
     else
       variables.insert({name, AnalyzerVariable(mods, table->IDs.size() - 1)});
+  }
+  void DefineFunction(const FunctionStatement &func) {
+    if (auto a = existFunction(func.name, false)) {
+      a->params = func.params.size();
+      a->mods = func.mods;
+      return;
+    }
+    table->FunctionSlots.push_back(table->nextFunctionSlot++);
+    auto a = table->FunctionSlots.back();
+    Functions.insert(
+        {func.name, Analyzer_function(a, func.params.size(), func.mods)});
+  }
+  Analyzer_function *existFunction(const std::string &name,
+                                   bool isCall = true) {
+    if (auto a = Functions.find(name); a != Functions.end()) {
+      if (isCall)
+        table->CallSlots.push_back(a->second.id);
+      return &a->second;
+    }
+    if (parent)
+      return parent->existFunction(name);
+    return nullptr;
   }
 };
 

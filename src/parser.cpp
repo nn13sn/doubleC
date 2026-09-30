@@ -530,8 +530,13 @@ std::unique_ptr<Statement> Parser::ParseFunction() {
       addModifier(param.mods, static_cast<Keyword>(peek().value));
       advance();
     }
-    if (Check(TokenType::Identifier))
-      param.name = peek().lexeme;
+    if (Check(TokenType::Identifier)) {
+      param.var.name = peek().lexeme;
+      param.var.ExpressionType = ExprType::Variable;
+      param.var.location.line = peek().lineID;
+      param.var.location.column = peek().columnID;
+    }
+
     else
       SyntaxErr("The parameter name is expected");
     advance();
@@ -606,6 +611,8 @@ std::unique_ptr<Statement> Parser::MakeStatement() {
     errors.push_back(err);
     if (getToBracket())
       return ParseBlock();
+    if (Check(Separator::RightCurlyBracket))
+      pos++;
     return nullptr;
   }
 }

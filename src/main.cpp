@@ -39,10 +39,10 @@ int main(int argc, char *argv[]) {
     // interpreter.execute(program);
     std::cout << "Reached Generator!\n";
     Generator generator(analyzer.table);
-    auto code = generator.Generate(program);
+    auto code = generator.StartGeneration(program);
     program.statements.clear();
     std::cout << "Reached VM!\n";
-    VM vm(analyzer.table.slots.size());
+    VM vm(analyzer.table.slots.size(), analyzer.table.FunctionSlots.size());
     auto result = vm.evaluate(code);
     if (result == VM_ERROR)
       return DC_RUNTIME_ERROR;

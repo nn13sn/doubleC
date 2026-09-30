@@ -1,6 +1,7 @@
 #pragma once
+#include "ASTexpressions.h"
 #include <string>
 struct Parameter {
-  std::string name;
+  Variable var;
   int32_t mods = 0;
 };

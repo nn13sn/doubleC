@@ -2,12 +2,18 @@
 #include "runtime_value.h"
 #include "vm_error.h"
 
-Environment::Environment(const uint32_t &size) { locals.resize(size); }
+Environment::Environment(const uint32_t &size) {
+  Generalsize = size;
+  locals.resize(size);
+}
 
 void Environment::enterScope() { scopesizes.push_back(locals.size()); }
 
 void Environment::exitScope() {
   locals.resize(scopesizes.back());
+  locals.resize(Generalsize); // resize clears the whole vector before certain
+                              // point, but the vector still needs slots, so
+                              // basically it deletes and creates default slots
   scopesizes.pop_back();
 }
 

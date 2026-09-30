@@ -1,6 +1,7 @@
 #include "analyzer.h"
 #include "AST.h"
 #include "analyzer_variable.h"
+#include "semantic_error.h"
 #include "utils.h"
 
 void Analyzer::AnalyzeExpression(const Expression &expr) {
@@ -27,7 +28,11 @@ void Analyzer::AnalyzeExpression(const Expression &expr) {
     return;
   case ExprType::FunctionCall: {
     const auto &a = static_cast<const FunctionCall &>(expr);
-    if (!env->exists(a.name))
+    if (auto b = env->existFunction(a.name)) {
+      if (a.parameters.size() != b->params)
+        errors.push_back(SemanticError(
+            "Invalid number of parameters in a function call", a.location));
+    } else
       errors.push_back(
           SemanticError("Such function does not seem to exist", a.location));
     for (auto &expr : a.parameters) {
@@ -158,13 +163,11 @@ void Analyzer::AnalyzeContinue(const ContinueStmt &stmt) {
 
 void Analyzer::AnalyzeFunction(const FunctionStatement &stmt) {
   int8_t previous = 0;
-  if (!env->parent && !env->exists(stmt.name))
-    currentmodifiers |= MOD_GLOBAL;
-  env->Define(currentmodifiers, stmt.name, errors, stmt.location);
-  if (utils::isDynamic(env->exists(stmt.name)->mods)) {
+  env->DefineFunction(stmt);
+  /*if (utils::isDynamic(env->exists(stmt.name)->mods)) {
     previous |= ignoreVariables;
     ignoreVariables = true;
-  }
+  }*/
   previous |= insidefunction << 1;
   insidefunction = true;
   newScope();
@@ -174,12 +177,12 @@ void Analyzer::AnalyzeFunction(const FunctionStatement &stmt) {
                               " : Such modifier(s) cannot be used with the "
                               "parameters of the function",
                           stmt.location);
-    env->Define(stmt.params[i].mods & utils::AllowedParam, stmt.params[i].name,
-                errors, stmt.location);
+    env->Define(stmt.params[i].mods & utils::AllowedParam,
+                stmt.params[i].var.name, errors, stmt.location);
   }
   analyze(*stmt.Instructions);
   insidefunction = previous & 0b10;
-  ignoreVariables = previous & 0b01;
+  // ignoreVariables = previous & 0b01;
   removeScope();
 }
 

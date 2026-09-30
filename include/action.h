@@ -42,6 +42,12 @@ enum class Action : uint8_t {
   ForStep,
   ForEnd,
 
+  PushFunction,
+  CallFunction,
+  Return,
+
   EnterScope,
-  ExitScope
+  ExitScope,
+
+  Halt
 };

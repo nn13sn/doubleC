@@ -1,14 +1,29 @@
 
+function bar(amount, randomNumber){
+	for(i->amount){
+		out(randomNumber)
+		out(" bar!\n")
+	}
+}
+
+function foo(){
+	out("foo!\n")
+	bar(6, 67.521488)
+}
+
 out("\n")
 
 i = 3
 for(i -> 8 : i = i + 2 ){
-out(i)
-out("\n")
+	out(i)
+	out("\n")
 }
 
 i = 0
+
 while(i<5){
-out("ok\n")
-i++
+	out("ok\n")
+	i++
 }
+
+foo()

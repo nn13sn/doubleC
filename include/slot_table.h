@@ -8,6 +8,9 @@ using Slot = uint32_t;
 struct Slot_Table {
   uint32_t nextID = 0;
   uint32_t nextSlot = 0;
+  uint32_t nextFunctionSlot = 0;
   std::vector<VariableID> IDs = {};
   std::vector<Slot> slots = {};
+  std::vector<Slot> FunctionSlots = {};
+  std::vector<uint32_t> CallSlots = {};
 };

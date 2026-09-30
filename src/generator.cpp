@@ -66,6 +66,13 @@ void Generator::GenerateExpression(const Expression &expr) {
     emit(expr.location, Action::Cast, static_cast<uint32_t>(cast.castTo));
     return;
   }
+  case ExprType::FunctionCall: {
+    const auto &call = static_cast<const FunctionCall &>(expr);
+    for (size_t i = 0; i < call.parameters.size(); i++) {
+      GenerateExpression(*call.parameters[i]);
+    }
+    emit(call.location, Action::CallFunction, indexes.CallSlots[call.id]);
+  }
   default:
     return;
   }
@@ -148,7 +155,18 @@ void Generator::GenerateFor(const For &stmt) {
   emit(stmt.location, Action::ExitScope);
 }
 
-const Bytecode &Generator::Generate(const Program &program) {
+void Generator::GenerateFunction(const FunctionStatement &stmt) {
+  for (auto it = stmt.params.rbegin(); it != stmt.params.rend(); it++) {
+    emit(it->var.location, Action::Store_Local,
+         indexes.slots[indexes.IDs[it->var.id]]);
+    emit(it->var.location, Action::Pop);
+  } // initializing variables in reverse, because the last variable is on the
+    // top of the stack
+  GenerateBody(*stmt.Instructions);
+  emit(stmt.location, Action::Return);
+}
+
+void Generator::Generate(const Program &program) {
   for (const auto &stmt : program.statements) {
     switch (stmt->StatementType) {
     case StmtType::ExpressionStmt:
@@ -171,9 +189,25 @@ const Bytecode &Generator::Generate(const Program &program) {
     case StmtType::For:
       GenerateFor(static_cast<const For &>(*stmt));
       break;
+    case StmtType::FunctionStatement:
+      emit(stmt->location, Action::PushFunction, code.functionsinfo.size());
+      code.functionsinfo.push_back(FunctionInfo{0});
+      AllFunctions.push_back(&static_cast<const FunctionStatement &>(*stmt));
+      break;
     default:
       break;
     }
+  }
+  return;
+}
+
+const Bytecode &Generator::StartGeneration(const Program &program) {
+  Generate(program);
+  emit(Location(SIZE_MAX, SIZE_MAX), Action::Halt);
+  for (size_t i = 0; i < AllFunctions.size(); i++) {
+    code.functionsinfo[i].entry = code.code.size();
+    code.functionsinfo[i].slot = indexes.FunctionSlots[AllFunctions[i]->id];
+    GenerateFunction(*AllFunctions[i]);
   }
   return code;
 }

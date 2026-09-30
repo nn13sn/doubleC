@@ -6,7 +6,7 @@ struct Environment {
   std::vector<RuntimeVariable> locals = {};
   inline static std::vector<RuntimeVariable> globals = {};
   std::shared_ptr<Environment> parent = nullptr;
-
+  size_t Generalsize;
   Environment(const uint32_t &size);
   void enterScope();
   void exitScope();
