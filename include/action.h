@@ -46,8 +46,5 @@ enum class Action : uint8_t {
   CallFunction,
   Return,
 
-  EnterScope,
-  ExitScope,
-
   Halt
 };

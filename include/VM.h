@@ -12,13 +12,11 @@ class VM {
 public:
   VM(const uint32_t &size, const size_t &funcsize);
   signed char evaluate(const Bytecode &code);
-  ~VM() { delete FuncEnv; }
 
 private:
   Stack stack;
   std::shared_ptr<Environment> env;
   std::vector<ForState> ForStates = {};
-  FunctionEnv *FuncEnv = new FunctionEnv();
   std::vector<CallState> CallStates = {};
   size_t instruction_number = 0;
   void Add();

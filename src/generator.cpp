@@ -14,11 +14,7 @@ void Generator::FinishJump(const size_t &instruction, const size_t &target) {
   code.code[instruction].operand = target;
 }
 
-void Generator::GenerateBody(const Program &program) {
-  emit(program.location, Action::EnterScope);
-  Generate(program);
-  emit(program.location, Action::ExitScope);
-}
+void Generator::GenerateBody(const Program &program) { Generate(program); }
 
 void Generator::GenerateExpression(const Expression &expr) {
   switch (expr.ExpressionType) {
@@ -118,7 +114,6 @@ void Generator::GenerateWhile(const While &stmt) {
 }
 
 void Generator::GenerateFor(const For &stmt) {
-  emit(stmt.location, Action::EnterScope);
   if (stmt.Initialvalue) {
     GenerateExpression(*stmt.Initialvalue);
     emit(stmt.location, Action::Store_Local,
@@ -147,12 +142,12 @@ void Generator::GenerateFor(const For &stmt) {
   GenerateBody(*stmt.Instructions);
   if (stmt.step) {
     GenerateExpression(*stmt.step);
+    emit(stmt.step->location, Action::Pop);
   } else
     emit(stmt.location, Action::ForStep);
   emit(stmt.location, Action::Jump, loopstart);
   FinishJump(jump, code.code.size());
   emit(stmt.location, Action::ForEnd);
-  emit(stmt.location, Action::ExitScope);
 }
 
 void Generator::GenerateFunction(const FunctionStatement &stmt) {
@@ -164,6 +159,12 @@ void Generator::GenerateFunction(const FunctionStatement &stmt) {
     // top of the stack
   GenerateBody(*stmt.Instructions);
   emit(stmt.location, Action::Return);
+}
+
+void Generator::GenerateReturn(const ReturnStatement &stmt) {
+  if (stmt.expr)
+    GenerateExpression(*stmt.expr);
+  emit(stmt.location, Action::Return, stmt.expr ? 1 : 0);
 }
 
 void Generator::Generate(const Program &program) {
@@ -193,6 +194,9 @@ void Generator::Generate(const Program &program) {
       emit(stmt->location, Action::PushFunction, code.functionsinfo.size());
       code.functionsinfo.push_back(FunctionInfo{0});
       AllFunctions.push_back(&static_cast<const FunctionStatement &>(*stmt));
+      break;
+    case StmtType::ReturnStatement:
+      GenerateReturn(static_cast<const ReturnStatement &>(*stmt));
       break;
     default:
       break;

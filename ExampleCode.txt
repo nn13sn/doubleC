@@ -11,6 +11,18 @@ function foo(){
 	bar(6, 67.521488)
 }
 
+function abcd(index){
+	if(index == 0) {
+return 67
+}
+        else if(index == 1) {
+return 67-15
+}
+	else if(index == 2) {
+return 67-25
+}
+}
+
 out("\n")
 
 i = 3
@@ -27,3 +39,7 @@ while(i<5){
 }
 
 foo()
+out("\n")
+a = abcd(0)
+out(a)
+out("\n")

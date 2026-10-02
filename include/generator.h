@@ -17,6 +17,7 @@ private:
   void GenerateWhile(const While &stmt);
   void GenerateFor(const For &stmt);
   void GenerateFunction(const FunctionStatement &stmt);
+  void GenerateReturn(const ReturnStatement &stmt);
   Bytecode code;
   uint32_t index = 0;
   std::vector<const FunctionStatement *> AllFunctions = {};

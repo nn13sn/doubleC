@@ -1,15 +1,12 @@
 #pragma once
+#include "function_info.h"
 #include "runtime_value.h"
 #include "runtime_variable.h"
 struct Environment {
-  std::vector<size_t> scopesizes;
   std::vector<RuntimeVariable> locals = {};
+  std::vector<FunctionInfo> functions = {};
   inline static std::vector<RuntimeVariable> globals = {};
-  std::shared_ptr<Environment> parent = nullptr;
-  size_t Generalsize;
-  Environment(const uint32_t &size);
-  void enterScope();
-  void exitScope();
+  Environment(const uint32_t &size, const size_t &funcsize);
   RuntimeVariable get(const uint32_t &index);
   RuntimeVariable *getPointer(const uint32_t &index);
   void set(const uint32_t &index, const RuntimeValue &value,

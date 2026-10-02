@@ -2,34 +2,20 @@
 #include "runtime_value.h"
 #include "vm_error.h"
 
-Environment::Environment(const uint32_t &size) {
-  Generalsize = size;
+Environment::Environment(const uint32_t &size, const size_t &funcsize) {
   locals.resize(size);
-}
-
-void Environment::enterScope() { scopesizes.push_back(locals.size()); }
-
-void Environment::exitScope() {
-  locals.resize(scopesizes.back());
-  locals.resize(Generalsize); // resize clears the whole vector before certain
-                              // point, but the vector still needs slots, so
-                              // basically it deletes and creates default slots
-  scopesizes.pop_back();
+  functions.resize(funcsize);
 }
 
 RuntimeVariable Environment::get(const uint32_t &index) {
   if (index < locals.size())
     return locals[index];
-  if (parent)
-    return parent->get(index);
   return RuntimeValue(Datatype::Invalid, NULL);
 }
 
 RuntimeVariable *Environment::getPointer(const uint32_t &index) {
   if (index < locals.size())
     return &locals[index];
-  if (parent)
-    return parent->getPointer(index);
   return nullptr;
 }
 
