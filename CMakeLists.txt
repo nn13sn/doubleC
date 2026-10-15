@@ -8,6 +8,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(DoubleC LANGUAGES CXX)
 
+set(ASMJIT_STATIC TRUE)
+add_subdirectory(external/asmjit)
+
 add_executable(DoubleC
     src/main.cpp
     src/lexer.cpp
@@ -22,9 +25,12 @@ add_executable(DoubleC
     src/runtime_operations.cpp
     src/runtime_cast.cpp
     src/runtime_streams.cpp
+    src/compiler.cpp
 )
 
 target_compile_features(DoubleC PRIVATE cxx_std_20)
+
+target_link_libraries(DoubleC PRIVATE asmjit::asmjit)
 
 target_compile_options(DoubleC PRIVATE
     -Wall

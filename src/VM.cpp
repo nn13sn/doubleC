@@ -10,6 +10,11 @@ VM::VM(const uint32_t &size, const size_t &funcsize) {
   env = std::make_shared<Environment>(size, funcsize);
 }
 
+void VM::getCompiled(const size_t &funcid) {
+  env->functions[funcid].compversion = compiler->CompileFunc(
+      env->functions[funcid].entry, env->functions[funcid].exit);
+}
+
 template <typename OperationFunc> void VM::BinaryOperation(OperationFunc func) {
   auto right = stack.Pop();
   auto left = stack.Pop();
@@ -22,7 +27,7 @@ template <typename OperationFunc> void VM::UnaryOperation(OperationFunc func) {
 }
 
 signed char VM::evaluate(const Bytecode &code) {
-
+  compiler = std::make_unique<Compiler>(code);
   try {
     while (instruction_number < code.code.size()) {
       const Instruction &instruction = code.code[instruction_number++];
@@ -168,8 +173,17 @@ signed char VM::evaluate(const Bytecode &code) {
             code.functionsinfo[instruction.operand];
         break;
       case Action::CallFunction:
-        CallStates.push_back(CallState{instruction_number});
-        instruction_number = env->functions[instruction.operand].entry;
+        if (env->functions[instruction.operand].compversion) {
+          stack.Push(
+              RuntimeValue(Datatype::Int,
+                           env->functions[instruction.operand].compversion()));
+        } else {
+          CallStates.push_back(CallState{instruction_number});
+          instruction_number = env->functions[instruction.operand].entry;
+          getCompiled(
+              instruction
+                  .operand); // it should be synchronical, but for now its async
+        }
         break;
       case Action::Return:
         instruction_number = CallStates.back().returnPoint;

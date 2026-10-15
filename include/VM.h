@@ -1,6 +1,7 @@
 #pragma once
 #include "bytecode.h"
 #include "callstate.h"
+#include "compiler.h"
 #include "environment.h"
 #include "forstate.h"
 #include "functionenv.h"
@@ -14,6 +15,9 @@ public:
   signed char evaluate(const Bytecode &code);
 
 private:
+  std::unique_ptr<Compiler> compiler;
+  void getCompiled(const size_t &funcid);
+
   Stack stack;
   std::shared_ptr<Environment> env;
   std::vector<ForState> ForStates = {};

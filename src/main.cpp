@@ -8,6 +8,7 @@
 #include "AST.h"
 #include "VM.h"
 #include "analyzer.h"
+#include "compiler.h"
 #include "generator.h"
 #include "lexer.h"
 #include "parser.h"
@@ -35,8 +36,6 @@ int main(int argc, char *argv[]) {
       analyzer.printErrors();
       return DC_ANALYZER_ERROR;
     }
-    // Interpreter interpreter;
-    // interpreter.execute(program);
     std::cout << "Reached Generator!\n";
     Generator generator(analyzer.table);
     auto code = generator.StartGeneration(program);

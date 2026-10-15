@@ -192,7 +192,7 @@ void Generator::Generate(const Program &program) {
       break;
     case StmtType::FunctionStatement:
       emit(stmt->location, Action::PushFunction, code.functionsinfo.size());
-      code.functionsinfo.push_back(FunctionInfo{0});
+      code.functionsinfo.push_back(FunctionInfo{});
       AllFunctions.push_back(&static_cast<const FunctionStatement &>(*stmt));
       break;
     case StmtType::ReturnStatement:
@@ -212,6 +212,7 @@ const Bytecode &Generator::StartGeneration(const Program &program) {
     code.functionsinfo[i].entry = code.code.size();
     code.functionsinfo[i].slot = indexes.FunctionSlots[AllFunctions[i]->id];
     GenerateFunction(*AllFunctions[i]);
+    code.functionsinfo[i].exit = code.code.size();
   }
   return code;
 }

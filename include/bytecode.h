@@ -8,8 +8,9 @@
 struct Instruction {
   Action action;
   uint32_t operand = 0;
-  inline Instruction(const Action &action, const uint32_t &operand = 0)
+  Instruction(const Action &action, const uint32_t &operand = 0)
       : action(action), operand(operand) {};
+  Instruction() {};
 };
 
 struct Bytecode {
