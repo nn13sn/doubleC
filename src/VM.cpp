@@ -1,4 +1,5 @@
 #include "VM.h"
+#include "JITframe.h"
 #include "callstate.h"
 #include "functionenv.h"
 #include "runtime_cast.h"
@@ -174,9 +175,12 @@ signed char VM::evaluate(const Bytecode &code) {
         break;
       case Action::CallFunction:
         if (env->functions[instruction.operand].compversion) {
-          stack.Push(
-              RuntimeValue(Datatype::Int,
-                           env->functions[instruction.operand].compversion()));
+          JITFrame *ptr = new JITFrame();
+          ptr->return_value = new RuntimeValue(Datatype::Int, 0);
+          env->functions[instruction.operand].compversion(ptr);
+          stack.Push(*ptr->return_value);
+          delete ptr->return_value;
+          delete ptr;
         } else {
           CallStates.push_back(CallState{instruction_number});
           instruction_number = env->functions[instruction.operand].entry;

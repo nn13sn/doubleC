@@ -90,6 +90,8 @@ Action utils::getOperatorAction(const Operator &op, const bool &binary) {
     return Action::Mul;
   case Operator::Sub:
     return (binary) ? Action::Sub : Action::Neg;
+  case Operator::Mod:
+    return Action::Mod;
   case Operator::Equal:
     return Action::Equal;
   case Operator::NotEqual:

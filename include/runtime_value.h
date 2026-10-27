@@ -12,8 +12,6 @@ struct Function {
 using Data = std::variant<dc_int, dc_double, dc_char, dc_bool, dc_string,
                           std::vector<Literal>, std::shared_ptr<Function>>;
 
-using JITfunction = dc_int (*)();
-
 class RuntimeValue {
   Datatype type;
   Data data;

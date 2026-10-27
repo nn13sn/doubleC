@@ -6,7 +6,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(DoubleC LANGUAGES CXX)
+project(DoubleC LANGUAGES CXX ASM_NASM)
+
+set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 
 set(ASMJIT_STATIC TRUE)
 add_subdirectory(external/asmjit)
@@ -26,6 +28,11 @@ add_executable(DoubleC
     src/runtime_cast.cpp
     src/runtime_streams.cpp
     src/compiler.cpp
+    src/runtimeJIT_operations.cpp
+    src/runtime_ops.asm
+    src/error_handle.cpp
+    src/jit_return.cpp
+    src/JIT_integration.asm
 )
 
 target_compile_features(DoubleC PRIVATE cxx_std_20)
@@ -33,12 +40,12 @@ target_compile_features(DoubleC PRIVATE cxx_std_20)
 target_link_libraries(DoubleC PRIVATE asmjit::asmjit)
 
 target_compile_options(DoubleC PRIVATE
-    -Wall
-    -Wextra
-    -g
-    -O0
-    -fsanitize=address
-    -fno-omit-frame-pointer
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+    $<$<COMPILE_LANGUAGE:CXX>:-g>
+    $<$<COMPILE_LANGUAGE:CXX>:-O0>
+    $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-omit-frame-pointer>
 )
 
 target_link_options(DoubleC PRIVATE

@@ -1,5 +1,5 @@
 function sum(){
-	return 20+30
+	return 20 - 30
 }
 
 out(sum())

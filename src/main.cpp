@@ -9,10 +9,14 @@
 #include "VM.h"
 #include "analyzer.h"
 #include "compiler.h"
+#include "error_handle.h"
 #include "generator.h"
 #include "lexer.h"
 #include "parser.h"
 #include <iostream>
+
+const Bytecode *bytecode = nullptr;
+
 int main(int argc, char *argv[]) {
   try {
     if (argc == 1) {
@@ -41,6 +45,7 @@ int main(int argc, char *argv[]) {
     auto code = generator.StartGeneration(program);
     program.statements.clear();
     std::cout << "Reached VM!\n";
+    bytecode = &code;
     VM vm(analyzer.table.slots.size(), analyzer.table.FunctionSlots.size());
     auto result = vm.evaluate(code);
     if (result == VM_ERROR)
