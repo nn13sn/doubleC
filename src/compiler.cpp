@@ -118,8 +118,18 @@ void Compiler::ParseBytecode(asmjit::x86::Assembler &myasm, const size_t &from,
     case Action::NotEqual:
       RuntimeJITOperations::notequal(myasm);
       break;
+    case Action::Not:
+      RuntimeJITOperations::logicnot(myasm);
+      break;
+    case Action::Neg:
+      RuntimeJITOperations::neg(myasm);
+      break;
     case Action::Return:
       Return(myasm);
+      break;
+    case Action::Cast:
+      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      RuntimeJITOperations::cast(myasm);
       break;
     default:
       break;

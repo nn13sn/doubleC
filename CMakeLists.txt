@@ -42,6 +42,7 @@ target_link_libraries(DoubleC PRIVATE asmjit::asmjit)
 target_compile_options(DoubleC PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-Wall>
     $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+    $<$<COMPILE_LANGUAGE:CXX>:-gdwarf-4>
     $<$<COMPILE_LANGUAGE:CXX>:-g>
     $<$<COMPILE_LANGUAGE:CXX>:-O0>
     $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>

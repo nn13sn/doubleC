@@ -14,6 +14,9 @@ void LogicLessEQ();
 void LogicGreaterEQ();
 void LogicEqual();
 void LogicNotEqual();
+void GeneralCast();
+void UnaryNeg();
+void UnaryNot();
 }
 inline auto sum_address = reinterpret_cast<uintptr_t>(&sumInt);
 inline auto sub_address = reinterpret_cast<uintptr_t>(&subInt);
@@ -26,6 +29,9 @@ inline auto lesseq_address = reinterpret_cast<uintptr_t>(&LogicLessEQ);
 inline auto greatereq_address = reinterpret_cast<uintptr_t>(&LogicGreaterEQ);
 inline auto equal_address = reinterpret_cast<uintptr_t>(&LogicEqual);
 inline auto notequal_address = reinterpret_cast<uintptr_t>(&LogicNotEqual);
+inline auto generalcast_address = reinterpret_cast<uintptr_t>(&GeneralCast);
+inline auto neg_address = reinterpret_cast<uintptr_t>(&UnaryNeg);
+inline auto not_address = reinterpret_cast<uintptr_t>(&UnaryNot);
 
 void add(asmjit::x86::Assembler &myasm);
 void sub(asmjit::x86::Assembler &myasm);
@@ -38,4 +44,7 @@ void lesseq(asmjit::x86::Assembler &myasm);
 void greatereq(asmjit::x86::Assembler &myasm);
 void equal(asmjit::x86::Assembler &myasm);
 void notequal(asmjit::x86::Assembler &myasm);
+void cast(asmjit::x86::Assembler &myasm);
+void logicnot(asmjit::x86::Assembler &myasm);
+void neg(asmjit::x86::Assembler &myasm);
 } // namespace RuntimeJITOperations

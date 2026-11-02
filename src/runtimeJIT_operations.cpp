@@ -56,3 +56,18 @@ void RuntimeJITOperations::notequal(asmjit::x86::Assembler &myasm) {
   myasm.mov(asmjit::x86::rax, notequal_address);
   myasm.call(asmjit::x86::rax);
 }
+
+void RuntimeJITOperations::cast(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, generalcast_address);
+  myasm.call(asmjit::x86::rax);
+}
+
+void RuntimeJITOperations::logicnot(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, not_address);
+  myasm.call(asmjit::x86::rax);
+}
+
+void RuntimeJITOperations::neg(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, neg_address);
+  myasm.call(asmjit::x86::rax);
+}

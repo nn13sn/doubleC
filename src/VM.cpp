@@ -95,8 +95,8 @@ signed char VM::evaluate(const Bytecode &code) {
             RuntimeOperations::PostDecr(*env->getPointer(instruction.operand)));
         break;
       case Action::Cast:
-        RuntimeCast::Cast(stack.Pop(),
-                          static_cast<Datatype>(instruction.operand));
+        stack.Push(RuntimeCast::Cast(
+            stack.Pop(), static_cast<Datatype>(instruction.operand)));
         break;
       case Action::Store_Local:
         env->set(instruction.operand, stack.Top(), 0);
