@@ -1,4 +1,5 @@
 #include "runtime_value.h"
+#include "JIT_value.h"
 #include "vm_error.h"
 RuntimeValue::RuntimeValue(const Literal &value) {
   type = value.type;
@@ -82,3 +83,48 @@ void RuntimeValue::setData(const Data &data) {
 const Data &RuntimeValue::getData() const { return this->data; }
 
 const Datatype &RuntimeValue::getType() const { return this->type; }
+
+void RuntimeValue::convertToBits() {
+  switch (this->type) {
+  case Datatype::Int:
+    break;
+  case Datatype::Double:
+    this->data = std::bit_cast<int64_t>(std::get<dc_double>(this->data));
+    break;
+  case Datatype::Char:
+    this->data = static_cast<int64_t>(std::get<dc_char>(this->data));
+    break;
+  case Datatype::Bool:
+    this->data = static_cast<int64_t>(std::get<dc_bool>(this->data));
+    break;
+  case Datatype::String:
+    this->data = std::bit_cast<int64_t>(&std::get<dc_string>(this->data));
+    break;
+  default:
+    break;
+  }
+}
+
+void RuntimeValue::convertToValue() {
+  auto adress = std::bit_cast<JITvalue *>(std::get<dc_int>(this->data));
+  this->type = static_cast<Datatype>(adress->datatype);
+  switch (this->type) {
+  case Datatype::Int:
+    this->data = adress->value;
+    break;
+  case Datatype::Double:
+    this->data = std::bit_cast<dc_double>(adress->value);
+    break;
+  case Datatype::Char:
+    this->data = static_cast<dc_char>(adress->value);
+    break;
+  case Datatype::Bool:
+    this->data = static_cast<dc_bool>(adress->value);
+    break;
+  case Datatype::String:
+    this->data = *std::bit_cast<dc_string *>(adress->value);
+    break;
+  default:
+    break;
+  }
+}

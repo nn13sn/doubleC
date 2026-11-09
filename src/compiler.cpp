@@ -4,6 +4,7 @@
 #include "asmjit/x86/x86_operand.h"
 #include "runtimeJIT_operations.h"
 #include "runtime_cast.h"
+#include "stack.h"
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -124,6 +125,22 @@ void Compiler::ParseBytecode(asmjit::x86::Assembler &myasm, const size_t &from,
     case Action::Neg:
       RuntimeJITOperations::neg(myasm);
       break;
+    case Action::PreIncr:
+      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      RuntimeJITOperations::preincr(myasm);
+      break;
+    case Action::PostIncr:
+      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      RuntimeJITOperations::postincr(myasm);
+      break;
+    case Action::PreDecr:
+      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      RuntimeJITOperations::predecr(myasm);
+      break;
+    case Action::PostDecr:
+      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      RuntimeJITOperations::postdecr(myasm);
+      break;
     case Action::Return:
       Return(myasm);
       break;
@@ -131,13 +148,31 @@ void Compiler::ParseBytecode(asmjit::x86::Assembler &myasm, const size_t &from,
       myasm.mov(asmjit::x86::rdi, instruction->operand);
       RuntimeJITOperations::cast(myasm);
       break;
+    case Action::Load_Local:
+      myasm.mov(asmjit::x86::rax, instruction->operand);
+      myasm.shl(asmjit::x86::rax, 4);
+      myasm.add(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 8));
+      myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rax));
+      myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rax, 8));
+      break;
+    case Action::Store_Local:
+      myasm.mov(asmjit::x86::rax, instruction->operand);
+      myasm.shl(asmjit::x86::rax, 4);
+      myasm.add(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 8));
+      myasm.mov(asmjit::x86::rdi, asmjit::x86::qword_ptr(asmjit::x86::rsp));
+      myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 8), asmjit::x86::rdi);
+      myasm.mov(asmjit::x86::rdi, asmjit::x86::qword_ptr(asmjit::x86::rsp, 8));
+      myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), asmjit::x86::rdi);
+      break;
     default:
       break;
     }
   }
 }
 
-JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to) {
+JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
+                                  const size_t &numberOfParams) {
+
   asmjit::CodeHolder code;
   code.init(runtime.environment(), runtime.cpu_features());
 
@@ -145,6 +180,16 @@ JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to) {
 
   myasm.push(asmjit::x86::r12);
   myasm.mov(asmjit::x86::r12, asmjit::x86::rdi);
+
+  myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 16));
+  for (size_t i = numberOfParams; i > 0; i--) {
+    myasm.mov(asmjit::x86::rcx, i - 1);
+    myasm.shl(asmjit::x86::rcx, 4);
+    myasm.add(asmjit::x86::rcx, asmjit::x86::rax);
+    myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx));
+    myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx, 8));
+  }
+
   ParseBytecode(myasm, from, to);
 
   myasm.pop(asmjit::x86::r12);

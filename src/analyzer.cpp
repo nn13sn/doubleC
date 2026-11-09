@@ -70,9 +70,9 @@ void Analyzer::AnalyzeUnary(const Unary &expr) {
                         expr.location));
     }
     AnalyzeExpression(*expr.expr);
-    if (env->exists(static_cast<const Variable &>(*expr.expr).name))
-      env->exists(static_cast<const Variable &>(*expr.expr).name)
-          ->isallowed(MOD_NONE, errors, expr.location);
+    // env->exists(static_cast<const Variable &>(*expr.expr).name);
+    //  env->exists(static_cast<const Variable &>(*expr.expr).name)
+    //->isallowed(MOD_NONE, errors, expr.location);
     return;
   case Operator::PreDecr:
   case Operator::PostDecr:
@@ -82,9 +82,9 @@ void Analyzer::AnalyzeUnary(const Unary &expr) {
                         expr.location));
     }
     AnalyzeExpression(*expr.expr);
-    if (env->exists(static_cast<const Variable &>(*expr.expr).name))
-      env->exists(static_cast<const Variable &>(*expr.expr).name)
-          ->isallowed(MOD_NONE, errors, expr.location);
+    // env->exists(static_cast<const Variable &>(*expr.expr).name);
+    //  env->exists(static_cast<const Variable &>(*expr.expr).name)
+    //->isallowed(MOD_NONE, errors, expr.location);
     return;
   default:
     return AnalyzeExpression(*expr.expr);
@@ -168,9 +168,9 @@ void Analyzer::AnalyzeFunction(const FunctionStatement &stmt) {
     previous |= ignoreVariables;
     ignoreVariables = true;
   }*/
+  env = new AnalyzerEnv({}, env);
   previous |= insidefunction << 1;
   insidefunction = true;
-  newScope();
   for (size_t i = 0; i < stmt.params.size(); i++) {
     if (!utils::CheckModifiers(stmt.params[i]))
       errors.emplace_back("Parameter number " + std::to_string(i + 1) +
@@ -181,9 +181,11 @@ void Analyzer::AnalyzeFunction(const FunctionStatement &stmt) {
                 stmt.params[i].var.name, errors, stmt.location);
   }
   analyze(*stmt.Instructions);
+  auto envcopy = env->parent;
+  delete env;
+  env = envcopy;
   insidefunction = previous & 0b10;
   // ignoreVariables = previous & 0b01;
-  removeScope();
 }
 
 void Analyzer::AnalyzeReturn(const ReturnStatement &stmt) {

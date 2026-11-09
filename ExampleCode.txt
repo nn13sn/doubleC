@@ -1,8 +1,15 @@
-function sum(){
-	return -( 20 + 120.78 -int( 50.78))
+
+function sum(a, b){
+return a+b
 }
 
-out(sum())
-out("\n")
-out(sum())
-out("\n")
+
+
+i = 0
+while(i < 5) {
+a = 10
+out(sum(i, a))
+i++
+}
+out("done")
+

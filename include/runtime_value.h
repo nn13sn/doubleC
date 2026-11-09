@@ -25,6 +25,8 @@ public:
   void decrement();
   void set(const RuntimeValue &var);
   void setData(const Data &data);
+  void convertToBits();
+  void convertToValue();
   const Data &getData() const;
   const Datatype &getType() const;
 };

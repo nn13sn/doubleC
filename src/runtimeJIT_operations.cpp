@@ -71,3 +71,23 @@ void RuntimeJITOperations::neg(asmjit::x86::Assembler &myasm) {
   myasm.mov(asmjit::x86::rax, neg_address);
   myasm.call(asmjit::x86::rax);
 }
+
+void RuntimeJITOperations::preincr(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, preincr_address);
+  myasm.call(asmjit::x86::rax);
+}
+
+void RuntimeJITOperations::postincr(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, postincr_address);
+  myasm.call(asmjit::x86::rax);
+}
+
+void RuntimeJITOperations::predecr(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, predecr_address);
+  myasm.call(asmjit::x86::rax);
+}
+
+void RuntimeJITOperations::postdecr(asmjit::x86::Assembler &myasm) {
+  myasm.mov(asmjit::x86::rax, postdecr_address);
+  myasm.call(asmjit::x86::rax);
+}

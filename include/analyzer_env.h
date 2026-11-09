@@ -36,6 +36,7 @@ struct AnalyzerEnv {
     else
       variables.insert({name, AnalyzerVariable(mods, table->IDs.size() - 1)});
   }
+
   void DefineFunction(const FunctionStatement &func) {
     if (auto a = existFunction(func.name, false)) {
       a->params = func.params.size();
@@ -47,6 +48,7 @@ struct AnalyzerEnv {
     Functions.insert(
         {func.name, Analyzer_function(a, func.params.size(), func.mods)});
   }
+
   Analyzer_function *existFunction(const std::string &name,
                                    bool isCall = true) {
     if (auto a = Functions.find(name); a != Functions.end()) {

@@ -239,22 +239,28 @@ RuntimeValue RuntimeOperations::Not(const RuntimeValue &value) {
 
 RuntimeValue RuntimeOperations::PreIncr(RuntimeVariable &value) {
   value.increment();
-  return value.get();
+  auto val = value.get();
+  val.convertToValue();
+  return val;
 }
 
 RuntimeValue RuntimeOperations::PostIncr(RuntimeVariable &value) {
   auto val = value.get();
+  val.convertToValue();
   value.increment();
   return val;
 }
 
 RuntimeValue RuntimeOperations::PreDecr(RuntimeVariable &value) {
   value.decrement();
+  auto val = value.get();
+  val.convertToValue();
   return value.get();
 }
 
 RuntimeValue RuntimeOperations::PostDecr(RuntimeVariable &value) {
   auto val = value.get();
+  val.convertToValue();
   value.decrement();
   return val;
 }

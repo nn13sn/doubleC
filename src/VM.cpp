@@ -1,4 +1,5 @@
 #include "VM.h"
+#include "JIT_value.h"
 #include "JITframe.h"
 #include "callstate.h"
 #include "functionenv.h"
@@ -6,14 +7,17 @@
 #include "runtime_operations.h"
 #include "runtime_streams.h"
 #include "vm_error.h"
+#include <memory>
 
 VM::VM(const uint32_t &size, const size_t &funcsize) {
   env = std::make_shared<Environment>(size, funcsize);
+  envptr = env;
 }
 
 void VM::getCompiled(const size_t &funcid) {
   env->functions[funcid].compversion = compiler->CompileFunc(
-      env->functions[funcid].entry, env->functions[funcid].exit);
+      env->functions[funcid].entry, env->functions[funcid].exit,
+      env->functions[funcid].numberofparams);
 }
 
 template <typename OperationFunc> void VM::BinaryOperation(OperationFunc func) {
@@ -176,17 +180,29 @@ signed char VM::evaluate(const Bytecode &code) {
       case Action::CallFunction:
         if (env->functions[instruction.operand].compversion) {
           JITFrame *ptr = new JITFrame();
+          std::vector<JITvalue> stackcopy;
+          for (size_t i = 0;
+               i < env->functions[instruction.operand].numberofparams; i++) {
+            stack.Top().convertToBits();
+            stackcopy.push_back(
+                JITvalue{static_cast<int64_t>(stack.Top().getType()),
+                         std::get<int64_t>(stack.Pop().getData())});
+          }
+          ptr->stackptr = stackcopy.data();
           ptr->return_value = new RuntimeValue(Datatype::Int, 0);
+          ptr->envptr = realvalues.data();
           env->functions[instruction.operand].compversion(ptr);
           stack.Push(*ptr->return_value);
           delete ptr->return_value;
           delete ptr;
         } else {
+          std::cerr << "Interpreter version: \n";
           CallStates.push_back(CallState{instruction_number});
           instruction_number = env->functions[instruction.operand].entry;
           getCompiled(
               instruction
                   .operand); // it should be synchronical, but for now its async
+          std::cerr << "After interpreter version: \n";
         }
         break;
       case Action::Return:

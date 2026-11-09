@@ -42,15 +42,20 @@ target_link_libraries(DoubleC PRIVATE asmjit::asmjit)
 target_compile_options(DoubleC PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-Wall>
     $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
-    $<$<COMPILE_LANGUAGE:CXX>:-gdwarf-4>
-    $<$<COMPILE_LANGUAGE:CXX>:-g>
-    $<$<COMPILE_LANGUAGE:CXX>:-O0>
-    $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-omit-frame-pointer>
+
+    # Debug
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:-gdwarf-4>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:-g>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:-O0>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:-fsanitize=address>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:-fno-omit-frame-pointer>
+
+    # Release
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:-O3>
 )
 
 target_link_options(DoubleC PRIVATE
-    -fsanitize=address
+       $<$<CONFIG:Debug>:-fsanitize=address>
 )
 
 target_include_directories(DoubleC PRIVATE include)

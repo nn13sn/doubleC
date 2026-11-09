@@ -17,7 +17,12 @@ void LogicNotEqual();
 void GeneralCast();
 void UnaryNeg();
 void UnaryNot();
+void PreIncr();
+void PostIncr();
+void PreDecr();
+void PostDecr();
 }
+
 inline auto sum_address = reinterpret_cast<uintptr_t>(&sumInt);
 inline auto sub_address = reinterpret_cast<uintptr_t>(&subInt);
 inline auto mul_address = reinterpret_cast<uintptr_t>(&mulInt);
@@ -32,6 +37,10 @@ inline auto notequal_address = reinterpret_cast<uintptr_t>(&LogicNotEqual);
 inline auto generalcast_address = reinterpret_cast<uintptr_t>(&GeneralCast);
 inline auto neg_address = reinterpret_cast<uintptr_t>(&UnaryNeg);
 inline auto not_address = reinterpret_cast<uintptr_t>(&UnaryNot);
+inline auto preincr_address = reinterpret_cast<uintptr_t>(&PreIncr);
+inline auto postincr_address = reinterpret_cast<uintptr_t>(&PostIncr);
+inline auto predecr_address = reinterpret_cast<uintptr_t>(&PreDecr);
+inline auto postdecr_address = reinterpret_cast<uintptr_t>(&PostDecr);
 
 void add(asmjit::x86::Assembler &myasm);
 void sub(asmjit::x86::Assembler &myasm);
@@ -47,4 +56,8 @@ void notequal(asmjit::x86::Assembler &myasm);
 void cast(asmjit::x86::Assembler &myasm);
 void logicnot(asmjit::x86::Assembler &myasm);
 void neg(asmjit::x86::Assembler &myasm);
+void preincr(asmjit::x86::Assembler &myasm);
+void postincr(asmjit::x86::Assembler &myasm);
+void predecr(asmjit::x86::Assembler &myasm);
+void postdecr(asmjit::x86::Assembler &myasm);
 } // namespace RuntimeJITOperations

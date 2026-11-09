@@ -1,4 +1,6 @@
 # build artifacts
+build-debug/
+build-release/
 build/
 .cache/
 CMakeFiles/

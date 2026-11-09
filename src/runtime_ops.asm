@@ -6,6 +6,7 @@ section .rodata
 align 8 
 int64_min: dq 0xC3E0000000000000  ; -2^63
 int64_max: dq 0x43E0000000000000 ; +2^63
+one: dq 1.0
 
 section .text 
 
@@ -25,6 +26,141 @@ global LogicNotEqual
 global GeneralCast  
 global UnaryNeg 
 global UnaryNot
+global PreIncr
+global PostIncr 
+global PreDecr
+global PostDecr
+
+PreIncr: ;rdi - index
+mov rax, qword [r12 + 8]
+shl rdi, 4
+add rax, rdi 
+mov rsi, qword [rax + 8]
+mov rdi, qword [rax]
+cmp rdi, 4 
+je string_err 
+cmp rdi, 3 
+je bool_unary_err
+cmp rdi, 1 
+je .double
+add rsi, 1 
+mov [rax + 8],rsi 
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+mov [rsp + 8], rsi 
+mov [rsp], r8
+ret
+
+.double: 
+movq xmm0, rsi 
+addsd xmm0, qword [rel one]
+movq [rax + 8], xmm0 
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+movq [rsp + 8], xmm0 
+mov [rsp], r8
+ret 
+
+PostIncr: ;rdi - index
+mov rax, qword [r12 + 8]
+shl rdi, 4
+add rax, rdi 
+mov rsi, qword [rax + 8]
+mov rdi, qword [rax]
+cmp rdi, 4 
+je string_err 
+cmp rdi, 3 
+je bool_unary_err
+cmp rdi, 1 
+je .double
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+mov [rsp + 8], rsi 
+mov [rsp], r8
+add rsi, 1 
+mov [rax + 8],rsi 
+ret
+
+.double: 
+movq xmm0, rsi 
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+movq [rsp + 8], xmm0 
+mov [rsp], r8
+addsd xmm0, qword [rel one]
+movq [rax + 8], xmm0 
+ret 
+
+
+PreDecr: ;rdi - index
+mov rax, qword [r12 + 8]
+shl rdi, 4
+add rax, rdi 
+mov rsi, qword [rax + 8]
+mov rdi, qword [rax]
+cmp rdi, 4 
+je string_err 
+cmp rdi, 3 
+je bool_unary_err
+cmp rdi, 1 
+je .double
+sub rsi, 1 
+mov [rax + 8],rsi 
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+mov [rsp + 8], rsi 
+mov [rsp], r8
+ret
+
+.double: 
+movq xmm0, rsi 
+subsd xmm0, qword [rel one]
+movq [rax + 8], xmm0 
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+movq [rsp + 8], xmm0 
+mov [rsp], r8
+ret 
+
+PostDecr: ;rdi - index
+mov rax, qword [r12 + 8]
+shl rdi, 4
+add rax, rdi 
+mov rsi, qword [rax + 8]
+mov rdi, qword [rax]
+cmp rdi, 4 
+je string_err 
+cmp rdi, 3 
+je bool_unary_err
+cmp rdi, 1 
+je .double
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+mov [rsp + 8], rsi 
+mov [rsp], r8
+sub rsi, 1 
+mov [rax + 8],rsi 
+ret
+
+.double: 
+movq xmm0, rsi
+mov r8, [rsp]
+sub rsp, 16
+mov [rsp + 16], rdi 
+movq [rsp + 8], xmm0 
+mov [rsp], r8
+subsd xmm0, qword [rel one]
+movq [rax + 8], xmm0
+ret 
+
+
 
 GeneralCast:   ;rdi - datatype to cast into 
 mov rsi, qword [rsp + 8]
@@ -149,7 +285,7 @@ ret
 
 UnaryNot:
 mov rdi, [rsp + 16] 
-cmp rdi, 4 
+cmp rdi, 4
 je string_err 
 mov rsi, [rsp + 8]
 call ToDouble 
@@ -610,6 +746,10 @@ jmp runtime_error
 
 neg_operator_err:
 mov rdi, 9 
+jmp runtime_error
+
+bool_unary_err:
+mov rdi, 10 
 jmp runtime_error
 
 runtime_error:

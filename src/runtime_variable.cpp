@@ -1,4 +1,5 @@
 #include "runtime_variable.h"
+#include "JIT_value.h"
 #include "runtime_value.h"
 #include "vm_error.h"
 bool RuntimeVariable::CheckConst() { return !(isConst || locked); }
@@ -14,7 +15,13 @@ void RuntimeVariable::increment() {
     throw VM_error("Cannot modify constant");
   if (locked)
     throw VM_error("Cannot modify loop iterator");
+  auto adress = std::bit_cast<JITvalue *>(std::get<dc_int>(value.getData()));
+  value.convertToValue();
   value.increment();
+  value.convertToBits();
+  adress->datatype = static_cast<int64_t>(value.getType());
+  adress->value = std::move(std::get<dc_int>(value.getData()));
+  value.setData(std::bit_cast<int64_t>(adress));
 }
 
 void RuntimeVariable::decrement() {
@@ -22,7 +29,13 @@ void RuntimeVariable::decrement() {
     throw VM_error("Cannot modify constant");
   if (locked)
     throw VM_error("Cannot modify loop iterator");
-  value.decrement();
+  auto adress = std::bit_cast<JITvalue *>(std::get<dc_int>(value.getData()));
+  value.convertToValue();
+  value.increment();
+  value.convertToBits();
+  adress->datatype = static_cast<int64_t>(value.getType());
+  adress->value = std::move(std::get<dc_int>(value.getData()));
+  value.setData(std::bit_cast<int64_t>(adress));
 }
 
 void RuntimeVariable::set(const RuntimeValue &value) {

@@ -211,6 +211,7 @@ const Bytecode &Generator::StartGeneration(const Program &program) {
   for (size_t i = 0; i < AllFunctions.size(); i++) {
     code.functionsinfo[i].entry = code.code.size();
     code.functionsinfo[i].slot = indexes.FunctionSlots[AllFunctions[i]->id];
+    code.functionsinfo[i].numberofparams = AllFunctions[i]->params.size();
     GenerateFunction(*AllFunctions[i]);
     code.functionsinfo[i].exit = code.code.size();
   }

@@ -2,6 +2,7 @@
 #include "runtime_value.h"
 #include "vm_error.h"
 #include <vector>
+class VM;
 class Stack {
 private:
   std::vector<RuntimeValue> data = {};
@@ -22,4 +23,5 @@ public:
   }
   inline size_t Size() { return data.size(); }
   inline const RuntimeValue &peek(const size_t &pos) { return data[pos]; }
+  friend VM;
 };

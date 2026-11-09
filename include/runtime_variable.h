@@ -1,6 +1,5 @@
 #pragma once
 #include "runtime_value.h"
-
 class RuntimeVariable {
   RuntimeValue value;
   bool isConst = false;

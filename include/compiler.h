@@ -3,6 +3,7 @@
 #include "asmjit/x86/x86_assembler.h"
 #include "bytecode.h"
 #include "runtime_value.h"
+#include "stack.h"
 #include <asmjit/x86.h>
 extern "C" size_t current_instruction;
 inline auto instruction_address =
@@ -13,7 +14,8 @@ inline auto return_address = reinterpret_cast<uintptr_t>(&ReturnValue);
 class Compiler {
 public:
   Compiler(const Bytecode &bytecode) : bytecode(bytecode) {};
-  JITfunction CompileFunc(const size_t &from, const size_t &to);
+  JITfunction CompileFunc(const size_t &from, const size_t &to,
+                          const size_t &numberOfParams);
 
 private:
   const Bytecode &bytecode;

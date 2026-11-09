@@ -32,6 +32,10 @@ extern "C" void PrintError(size_t errorNum, size_t bytecodenum) {
     std::cerr << "Negative operator cannot be used with unsigned or "
                  "non-numercal data types";
     break;
+  case 10:
+    std::cerr
+        << "The increment/decrement operator cannot be used with bool datatype";
+    break;
   }
   std::cerr << " at line: " +
                    std::to_string(bytecode->locations[bytecodenum].line);

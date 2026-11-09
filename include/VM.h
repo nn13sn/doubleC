@@ -9,6 +9,9 @@
 #include "stack.h"
 #define VM_ERROR -1
 #define VM_OK 1
+
+inline std::shared_ptr<Environment> envptr;
+
 class VM {
 public:
   VM(const uint32_t &size, const size_t &funcsize);
