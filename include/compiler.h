@@ -20,7 +20,8 @@ public:
 private:
   const Bytecode &bytecode;
   const Instruction *instruction;
-  void ParseBytecode(asmjit::x86::Assembler &myasm, const size_t &from,
+  void ParseBytecode(std::vector<asmjit::Label> &labels,
+                     asmjit::x86::Assembler &myasm, const size_t &from,
                      const size_t &to);
   void Push(asmjit::x86::Assembler &myasm);
   void Pop(asmjit::x86::Assembler &myasm);

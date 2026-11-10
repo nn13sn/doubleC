@@ -107,6 +107,7 @@ void RuntimeValue::convertToBits() {
 
 void RuntimeValue::convertToValue() {
   auto adress = std::bit_cast<JITvalue *>(std::get<dc_int>(this->data));
+
   this->type = static_cast<Datatype>(adress->datatype);
   switch (this->type) {
   case Datatype::Int:

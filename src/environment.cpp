@@ -38,6 +38,7 @@ void Environment::set(const uint32_t &index, const RuntimeValue &value,
       throw VM_error("Modifiers can be used only with the first declaration");
 
     ptr->set(cpvalue);
+
     return;
   }
 

@@ -55,9 +55,10 @@ void Analyzer::AnalyzeAssignment(const Assignment &expr) {
     errors.push_back(
         SemanticError("The definition operator can only be used to variables",
                       expr.location));
-  AnalyzeExpression(*expr.right);
+
   env->Define(currentmodifiers, static_cast<const Variable &>(*expr.left).name,
               errors, expr.location);
+  AnalyzeExpression(*expr.right);
 }
 
 void Analyzer::AnalyzeUnary(const Unary &expr) {
@@ -262,6 +263,8 @@ void Analyzer::printErrors() {
 
 void Analyzer::newScope() {
   env = new AnalyzerEnv({}, env);
+  if (insidefunction)
+    return;
   Scopestats.push_back(table.nextSlot);
 }
 
@@ -269,6 +272,8 @@ void Analyzer::removeScope() {
   auto envcopy = env->parent;
   delete env;
   env = envcopy;
+  if (insidefunction)
+    return;
   table.nextSlot = Scopestats.back();
   Scopestats.pop_back();
 }

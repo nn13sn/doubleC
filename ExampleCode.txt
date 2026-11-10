@@ -1,15 +1,16 @@
-
-function sum(a, b){
-return a+b
+function sum(a,b){
+c = a % b
+if(c == 0) {
+	return 1
+} else
+{
+return 2
 }
-
+}
 
 
 i = 0
-while(i < 5) {
-a = 10
-out(sum(i, a))
+while(i<5) {
+out(sum(i, 2))
 i++
 }
-out("done")
-

@@ -2,7 +2,6 @@
 #include "JIT_value.h"
 #include "JITframe.h"
 #include "callstate.h"
-#include "functionenv.h"
 #include "runtime_cast.h"
 #include "runtime_operations.h"
 #include "runtime_streams.h"

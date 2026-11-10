@@ -73,9 +73,11 @@ void Compiler::Return(asmjit::x86::Assembler &myasm) {
   myasm.ret();
 }
 
-void Compiler::ParseBytecode(asmjit::x86::Assembler &myasm, const size_t &from,
+void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
+                             asmjit::x86::Assembler &myasm, const size_t &from,
                              const size_t &to) {
   for (size_t i = from; i < to; i++) {
+    myasm.bind(labels[i - from]);
     instruction = &bytecode.code[i];
     myasm.mov(asmjit::x86::rax, instruction_address);
     myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), i);
@@ -164,6 +166,14 @@ void Compiler::ParseBytecode(asmjit::x86::Assembler &myasm, const size_t &from,
       myasm.mov(asmjit::x86::rdi, asmjit::x86::qword_ptr(asmjit::x86::rsp, 8));
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), asmjit::x86::rdi);
       break;
+    case Action::Jump:
+      myasm.jmp(labels[instruction->operand - from]);
+      break;
+    case Action::JumpIfFalse:
+      Pop(myasm);
+      myasm.test(asmjit::x86::rax, asmjit::x86::rax);
+      myasm.jz(labels[instruction->operand - from]);
+      break;
     default:
       break;
     }
@@ -178,6 +188,8 @@ JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
 
   asmjit::x86::Assembler myasm(&code);
 
+  std::vector<asmjit::Label> labels;
+
   myasm.push(asmjit::x86::r12);
   myasm.mov(asmjit::x86::r12, asmjit::x86::rdi);
 
@@ -190,7 +202,11 @@ JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
     myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx, 8));
   }
 
-  ParseBytecode(myasm, from, to);
+  for (size_t i = from; i < to; i++) {
+    labels.push_back(myasm.new_label());
+  }
+
+  ParseBytecode(labels, myasm, from, to);
 
   myasm.pop(asmjit::x86::r12);
   myasm.ret();

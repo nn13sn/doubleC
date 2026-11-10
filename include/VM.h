@@ -4,7 +4,6 @@
 #include "compiler.h"
 #include "environment.h"
 #include "forstate.h"
-#include "functionenv.h"
 #include "runtime_variable.h"
 #include "stack.h"
 #define VM_ERROR -1

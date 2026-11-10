@@ -37,10 +37,11 @@ void Generator::GenerateExpression(const Expression &expr) {
              [indexes.IDs[static_cast<const Variable &>(*assignment.left).id]]);
     return;
   }
-  case ExprType::Variable:
+  case ExprType::Variable: {
     emit(expr.location, Action::Load_Local,
          indexes.slots[indexes.IDs[static_cast<const Variable &>(expr).id]]);
     return;
+  }
   case ExprType::Unary: {
     const Unary &unary = static_cast<const Unary &>(expr);
     auto op = utils::getOperatorAction(unary.op, false);
