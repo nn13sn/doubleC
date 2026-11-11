@@ -8,8 +8,13 @@
 extern "C" size_t current_instruction;
 inline auto instruction_address =
     reinterpret_cast<uintptr_t>(&current_instruction);
+
 extern "C" void ReturnValue();
+extern "C" void asmPrint();
+extern "C" void asmInput();
 inline auto return_address = reinterpret_cast<uintptr_t>(&ReturnValue);
+inline auto input_address = reinterpret_cast<uintptr_t>(&asmInput);
+inline auto print_address = reinterpret_cast<uintptr_t>(&asmPrint);
 
 class Compiler {
 public:

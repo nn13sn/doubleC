@@ -27,7 +27,7 @@ void RuntimeStreams::PrintValue(const dc_char &value) {
     result += static_cast<char>(0x80 | ((value >> 6) & 0x3F));
     result += static_cast<char>(0x80 | (value & 0x3F));
   } // converting char32_t to string because std::cout does not support
-    // char32_t. I did not personaly code this one, just took it from ai
+    // char32_t.
   std::cout << result;
 }
 

@@ -1,16 +1,12 @@
 function sum(a,b){
-c = a % b
-if(c == 0) {
-	return 1
-} else
-{
-return 2
-}
+in(c) -> int 
+out(c)
+out("\n")
 }
 
 
 i = 0
 while(i<5) {
-out(sum(i, 2))
+sum(i, 2)
 i++
 }

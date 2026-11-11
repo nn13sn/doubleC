@@ -174,6 +174,17 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.test(asmjit::x86::rax, asmjit::x86::rax);
       myasm.jz(labels[instruction->operand - from]);
       break;
+    case Action::Read:
+      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rax, input_address);
+      myasm.call(input_address);
+      break;
+    case Action::Print:
+      myasm.pop(asmjit::x86::rsi);
+      myasm.pop(asmjit::x86::rdi);
+      myasm.mov(asmjit::x86::rax, print_address);
+      myasm.call(asmjit::x86::rax);
+      break;
     default:
       break;
     }

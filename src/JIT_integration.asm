@@ -5,9 +5,14 @@ extern ReturnDouble
 extern ReturnChar 
 extern ReturnBool 
 extern ReturnString 
+extern JITPrint 
+extern JITInput
 
 
-global ReturnValue 
+global ReturnValue
+global asmPrint
+global asmInput 
+
 
 ReturnValue:
 
@@ -61,3 +66,36 @@ jmp .done
 mov rsp, rbp 
 pop rbp
 ret 
+
+
+asmPrint:  ;registers rdi and rsi already contain the required values
+push rbp
+mov rbp, rsp
+and rsp, -16
+
+call JITPrint 
+
+mov rsp, rbp 
+pop rbp
+ret 
+
+
+asmInput:  ;register rdi has the datatype
+push rbp
+mov rbp, rsp
+and rsp, -16
+
+call JITInput 
+
+mov rsp, rbp 
+pop rbp
+
+mov r8, [rsp]
+sub rsp, 16 
+
+mov [rsp + 16], rax 
+mov[rsp + 8], rdx 
+mov [rsp], r8
+
+ret
+

@@ -31,7 +31,7 @@ add_executable(DoubleC
     src/runtimeJIT_operations.cpp
     src/runtime_ops.asm
     src/error_handle.cpp
-    src/jit_return.cpp
+    src/jit_integration.cpp
     src/JIT_integration.asm
 )
 
