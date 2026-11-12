@@ -129,6 +129,7 @@ signed char VM::evaluate(const Bytecode &code) {
       case Action::ForInit:
         ForStates.push_back(ForState());
         ForStates.back().iterator = instruction.operand >> 2;
+        ForStates.back().start = env->get(ForStates.back().iterator).get();
         ForStates.back().end = stack.Top();
         if ((instruction.operand & 0b11) == 1)
           ForStates.back().inclusive = false;
@@ -170,6 +171,7 @@ signed char VM::evaluate(const Bytecode &code) {
               *env->getPointer(ForStates.back().iterator));
         break;
       case Action::ForEnd:
+        env->set(ForStates.back().iterator, ForStates.back().start, 0);
         ForStates.pop_back();
         break;
       case Action::PushFunction:

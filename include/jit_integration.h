@@ -2,6 +2,7 @@
 
 #include "JIT_value.h"
 #include "datatype.h"
+#include "jitforstate.h"
 #include "runtime_value.h"
 
 extern "C" {
@@ -12,4 +13,6 @@ void ReturnBool(RuntimeValue *result, dc_bool value);
 void ReturnString(RuntimeValue *result, dc_string *value);
 void JITPrint(int64_t datatype, int64_t value);
 JITvalue JITInput(int64_t datatype);
+JITForState *PushFor();
+JITForState *PopFor();
 }

@@ -255,7 +255,7 @@ RuntimeValue RuntimeOperations::PreDecr(RuntimeVariable &value) {
   value.decrement();
   auto val = value.get();
   val.convertToValue();
-  return value.get();
+  return val;
 }
 
 RuntimeValue RuntimeOperations::PostDecr(RuntimeVariable &value) {

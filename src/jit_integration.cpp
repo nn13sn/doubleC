@@ -1,4 +1,5 @@
 #include "jit_integration.h"
+#include "jitforstate.h"
 #include "runtime_streams.h"
 #include <bit>
 
@@ -49,5 +50,17 @@ JITvalue JITInput(int64_t datatype) {
   JITvalue raw{static_cast<int64_t>(a.getType()),
                std::get<int64_t>(a.getData())};
   return raw;
+}
+
+JITForState *PushFor() {
+  jitforstates.emplace_back();
+  return &jitforstates.back();
+}
+
+JITForState *PopFor() {
+  jitforstates.pop_back();
+  if (!jitforstates.size())
+    return nullptr;
+  return &jitforstates.back();
 }
 }

@@ -12,9 +12,13 @@ inline auto instruction_address =
 extern "C" void ReturnValue();
 extern "C" void asmPrint();
 extern "C" void asmInput();
+extern "C" void asmForInit();
+extern "C" void asmForEnd();
 inline auto return_address = reinterpret_cast<uintptr_t>(&ReturnValue);
 inline auto input_address = reinterpret_cast<uintptr_t>(&asmInput);
 inline auto print_address = reinterpret_cast<uintptr_t>(&asmPrint);
+inline auto forinit_address = reinterpret_cast<uintptr_t>(&asmForInit);
+inline auto forend_address = reinterpret_cast<uintptr_t>(&asmForEnd);
 
 class Compiler {
 public:
@@ -25,6 +29,7 @@ public:
 private:
   const Bytecode &bytecode;
   const Instruction *instruction;
+  std::vector<bool> notsmart;
   void ParseBytecode(std::vector<asmjit::Label> &labels,
                      asmjit::x86::Assembler &myasm, const size_t &from,
                      const size_t &to);

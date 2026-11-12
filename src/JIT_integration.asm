@@ -7,11 +7,15 @@ extern ReturnBool
 extern ReturnString 
 extern JITPrint 
 extern JITInput
+extern PushFor 
+extern PopFor
 
 
 global ReturnValue
 global asmPrint
 global asmInput 
+global asmForInit 
+global asmForEnd
 
 
 ReturnValue:
@@ -99,3 +103,31 @@ mov [rsp], r8
 
 ret
 
+
+
+asmForInit:
+push rbp
+mov rbp, rsp
+and rsp, -16
+
+call PushFor 
+
+mov qword [r12 + 24], rax 
+
+mov rsp, rbp 
+pop rbp
+ret 
+
+
+asmForEnd:
+push rbp
+mov rbp, rsp
+and rsp, -16
+
+call PopFor 
+
+mov qword [r12 + 24], rax
+
+mov rsp, rbp 
+pop rbp
+ret 

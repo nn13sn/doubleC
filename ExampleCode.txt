@@ -1,12 +1,15 @@
 function sum(a,b){
-in(c) -> int 
-out(c)
-out("\n")
+out("start\n")
+i = 5
+for(i>0 : i--){
+out("check\n")
+}
+out("end")
 }
 
 
-i = 0
-while(i<5) {
-sum(i, 2)
-i++
+i = 5
+while(i>0) {
+out(sum(i, 2))
+--i
 }

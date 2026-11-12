@@ -31,7 +31,7 @@ void RuntimeVariable::decrement() {
     throw VM_error("Cannot modify loop iterator");
   auto adress = std::bit_cast<JITvalue *>(std::get<dc_int>(value.getData()));
   value.convertToValue();
-  value.increment();
+  value.decrement();
   value.convertToBits();
   adress->datatype = static_cast<int64_t>(value.getType());
   adress->value = std::move(std::get<dc_int>(value.getData()));
