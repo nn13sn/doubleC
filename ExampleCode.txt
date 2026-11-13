@@ -1,10 +1,17 @@
-function sum(a,b){
-out("start\n")
-i = 5
-for(i>0 : i--){
-out("check\n")
+function Abcd(a,b,c){
+out(a)
+out(b)
+out(c)
+out("check123\n")
+return 345 
 }
-out("end")
+
+
+
+
+function sum(a,b){
+out("checksum\n")
+out(Abcd(10,20,30))
 }
 
 
@@ -13,3 +20,5 @@ while(i>0) {
 out(sum(i, 2))
 --i
 }
+
+Abcd(5,6,7)

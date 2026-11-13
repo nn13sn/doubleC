@@ -2,6 +2,7 @@
 #include "JITfunction.h"
 #include "asmjit/x86/x86_assembler.h"
 #include "bytecode.h"
+#include "environment.h"
 #include "runtime_value.h"
 #include "stack.h"
 #include <asmjit/x86.h>
@@ -22,11 +23,15 @@ inline auto forend_address = reinterpret_cast<uintptr_t>(&asmForEnd);
 
 class Compiler {
 public:
-  Compiler(const Bytecode &bytecode) : bytecode(bytecode) {};
+  Compiler(const Bytecode &bytecode, std::shared_ptr<Environment> envptr)
+      : bytecode(bytecode) {
+    this->envptr = envptr;
+  };
   JITfunction CompileFunc(const size_t &from, const size_t &to,
                           const size_t &numberOfParams);
 
 private:
+  std::shared_ptr<Environment> envptr;
   const Bytecode &bytecode;
   const Instruction *instruction;
   std::vector<bool> notsmart;

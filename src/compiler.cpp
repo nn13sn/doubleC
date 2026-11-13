@@ -1,4 +1,6 @@
 #include "compiler.h"
+#include "JIT_value.h"
+#include "JITframe.h"
 #include "asmjit/core/code_holder.h"
 #include "asmjit/x86/x86_assembler.h"
 #include "asmjit/x86/x86_operand.h"
@@ -62,6 +64,21 @@ void Compiler::Pop(asmjit::x86::Assembler &myasm) {
 }
 
 void Compiler::Return(asmjit::x86::Assembler &myasm) {
+  myasm.cmp(asmjit::x86::byte_ptr(asmjit::x86::r12, 32), 0);
+  auto frominterpreter = myasm.new_label();
+  myasm.jne(frominterpreter);
+  myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12));
+  myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), 0);
+  myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 8), 0);
+  if (instruction->operand) {
+    myasm.pop(asmjit::x86::rsi);
+    myasm.pop(asmjit::x86::rdi);
+    myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), asmjit::x86::rsi);
+    myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 8), asmjit::x86::rdi);
+  }
+  myasm.pop(asmjit::x86::r12);
+  myasm.ret();
+  myasm.bind(frominterpreter);
   if (instruction->operand) {
     myasm.pop(asmjit::x86::rsi);
     myasm.pop(asmjit::x86::rdi);
@@ -298,6 +315,47 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.call(asmjit::x86::rax);
       notsmart.pop_back();
       break;
+    case Action::CallFunction: {
+      if (!envptr->functions[instruction->operand].compversion) {
+        auto instructioncopy = instruction;
+        envptr->functions[instruction->operand].compversion =
+            CompileFunc(envptr->functions[instruction->operand].entry,
+                        envptr->functions[instruction->operand].exit,
+                        envptr->functions[instruction->operand].numberofparams);
+        instruction = instructioncopy;
+      }
+      auto paramnum = envptr->functions[instruction->operand].numberofparams;
+      if (paramnum == 0) {
+        paramnum++;
+        myasm.push(0);
+        myasm.push(0);
+      }
+      myasm.mov(asmjit::x86::r8, asmjit::x86::rsp);
+      myasm.sub(asmjit::x86::rsp, 1);
+      myasm.mov(asmjit::x86::byte_ptr(asmjit::x86::rsp), 0);
+      myasm.push(0);
+      myasm.push(asmjit::x86::r8);
+      myasm.mov(asmjit::x86::rax,
+                reinterpret_cast<uint64_t>(realvalues.data()));
+      myasm.push(asmjit::x86::rax);
+      std::cout << "realvalues.data(): " << realvalues.data() << '\n';
+      myasm.mov(asmjit::x86::rax, 16 * (paramnum - 1));
+      myasm.add(asmjit::x86::rax, asmjit::x86::r8);
+      myasm.push(asmjit::x86::rax);
+      myasm.mov(asmjit::x86::rdi, asmjit::x86::rsp);
+      myasm.mov(asmjit::x86::rax,
+                envptr->functions[instruction->operand].compversion);
+      myasm.call(asmjit::x86::rax);
+      Pop(myasm);
+      Pop(myasm);
+      myasm.add(asmjit::x86::rsp, 1);
+      for (size_t y = 1;
+           y < envptr->functions[instruction->operand].numberofparams; y++) {
+        myasm.pop(asmjit::x86::rax);
+        myasm.pop(asmjit::x86::rax);
+      }
+      break;
+    }
     default:
       break;
     }
@@ -316,7 +374,9 @@ JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
 
   myasm.push(asmjit::x86::r12);
   myasm.mov(asmjit::x86::r12, asmjit::x86::rdi);
-
+  myasm.cmp(asmjit::x86::byte_ptr(asmjit::x86::r12, 32), 0);
+  auto compiledparams = myasm.new_label();
+  myasm.je(compiledparams);
   myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 16));
   for (size_t i = numberOfParams; i > 0; i--) {
     myasm.mov(asmjit::x86::rcx, i - 1);
@@ -325,7 +385,18 @@ JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
     myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx));
     myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx, 8));
   }
-
+  auto skip = myasm.new_label();
+  myasm.jmp(skip);
+  myasm.bind(compiledparams);
+  myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 16));
+  for (size_t i = numberOfParams; i > 0; i--) {
+    myasm.mov(asmjit::x86::rcx, i - 1);
+    myasm.shl(asmjit::x86::rcx, 4);
+    myasm.add(asmjit::x86::rcx, asmjit::x86::rax);
+    myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx, 8));
+    myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rcx));
+  }
+  myasm.bind(skip);
   for (size_t i = from; i < to; i++) {
     labels.push_back(myasm.new_label());
   }

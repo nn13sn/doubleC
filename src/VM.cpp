@@ -31,7 +31,7 @@ template <typename OperationFunc> void VM::UnaryOperation(OperationFunc func) {
 }
 
 signed char VM::evaluate(const Bytecode &code) {
-  compiler = std::make_unique<Compiler>(code);
+  compiler = std::make_unique<Compiler>(code, env);
   try {
     while (instruction_number < code.code.size()) {
       const Instruction &instruction = code.code[instruction_number++];
