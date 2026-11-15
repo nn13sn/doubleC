@@ -14,3 +14,4 @@ include/interpreter.h
 include/interpreter_error.h
 package/
 .clangd
+Examplecode.txt/
