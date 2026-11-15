@@ -1,28 +1,64 @@
 #include "VM.h"
+#include "AST.h"
+#include "JIT_value.h"
+#include "JITframe.h"
 #include "callstate.h"
-#include "functionenv.h"
+#include "function_info.h"
 #include "runtime_cast.h"
 #include "runtime_operations.h"
 #include "runtime_streams.h"
 #include "vm_error.h"
+#include <atomic>
+#include <memory>
 
 VM::VM(const uint32_t &size, const size_t &funcsize) {
   env = std::make_shared<Environment>(size, funcsize);
+  envptr = env;
+}
+
+VM::~VM() {
+
+  for (auto &func : env->functions) {
+    if (func.compile_thread.joinable())
+      func.compile_thread.join();
+  }
+}
+
+void VM::getCompiled(const size_t &funcid) {
+
+  auto &func = env->functions[funcid];
+
+  if (func.compiledstate != NOT_COMPILED)
+    return;
+
+  func.compiledstate = COMPILING;
+
+  func.compile_thread = std::thread([this, funcid]() {
+    auto &f = env->functions[funcid];
+
+    f.compversion = compiler->CompileFunc(f.entry, f.exit, f.numberofparams);
+
+    f.compiledstate.store(COMPILED, std::memory_order_release);
+
+    f.sync->cv.notify_all();
+  });
 }
 
 template <typename OperationFunc> void VM::BinaryOperation(OperationFunc func) {
+
   auto right = stack.Pop();
   auto left = stack.Pop();
   stack.Push(func(left, right));
 }
 
 template <typename OperationFunc> void VM::UnaryOperation(OperationFunc func) {
+
   auto value = stack.Pop();
   stack.Push(func(value));
 }
 
-signed char VM::evaluate(const Bytecode &code) {
-
+signed char VM::evaluate(Bytecode &code) {
+  compiler = std::make_unique<Compiler>(code, env);
   try {
     while (instruction_number < code.code.size()) {
       const Instruction &instruction = code.code[instruction_number++];
@@ -89,8 +125,8 @@ signed char VM::evaluate(const Bytecode &code) {
             RuntimeOperations::PostDecr(*env->getPointer(instruction.operand)));
         break;
       case Action::Cast:
-        RuntimeCast::Cast(stack.Pop(),
-                          static_cast<Datatype>(instruction.operand));
+        stack.Push(RuntimeCast::Cast(
+            stack.Pop(), static_cast<Datatype>(instruction.operand)));
         break;
       case Action::Store_Local:
         env->set(instruction.operand, stack.Top(), 0);
@@ -120,6 +156,7 @@ signed char VM::evaluate(const Bytecode &code) {
       case Action::ForInit:
         ForStates.push_back(ForState());
         ForStates.back().iterator = instruction.operand >> 2;
+        ForStates.back().start = env->get(ForStates.back().iterator).get();
         ForStates.back().end = stack.Top();
         if ((instruction.operand & 0b11) == 1)
           ForStates.back().inclusive = false;
@@ -161,15 +198,46 @@ signed char VM::evaluate(const Bytecode &code) {
               *env->getPointer(ForStates.back().iterator));
         break;
       case Action::ForEnd:
+        env->set(ForStates.back().iterator, ForStates.back().start, 0);
         ForStates.pop_back();
         break;
-      case Action::PushFunction:
-        env->functions[code.functionsinfo[instruction.operand].slot] =
-            code.functionsinfo[instruction.operand];
+      case Action::PushFunction: {
+        auto slot = code.functionsinfo[instruction.operand].slot;
+        env->functions[slot] =
+            std::move(code.functionsinfo[instruction.operand]);
         break;
+      }
       case Action::CallFunction:
-        CallStates.push_back(CallState{instruction_number});
-        instruction_number = env->functions[instruction.operand].entry;
+        if (env->functions[instruction.operand].compiledstate.load(
+                std::memory_order_acquire) == COMPILED) {
+          if (!env->functions[instruction.operand].threadjoined) {
+            env->functions[instruction.operand].compile_thread.join();
+            env->functions[instruction.operand].threadjoined = true;
+          }
+          JITFrame *ptr = new JITFrame();
+          std::vector<JITvalue> stackcopy;
+          for (size_t i = 0;
+               i < env->functions[instruction.operand].numberofparams; i++) {
+            stack.Top().convertToBits();
+            stackcopy.push_back(
+                JITvalue{static_cast<int64_t>(stack.Top().getType()),
+                         std::get<int64_t>(stack.Pop().getData())});
+          }
+          ptr->stackptr = stackcopy.data();
+          ptr->return_value = new RuntimeValue(Datatype::Int, 0);
+          ptr->envptr = realvalues.data();
+          env->functions[instruction.operand].compversion(ptr);
+          stack.Push(*ptr->return_value);
+          delete ptr->return_value;
+          delete ptr;
+        } else {
+          // std::cerr << "Interpreter version: \n";
+          CallStates.push_back(CallState{instruction_number});
+          instruction_number = env->functions[instruction.operand].entry;
+          if (env->functions[instruction.operand].mods & MOD_JIT)
+            getCompiled(instruction.operand); // it should be synchronical, but
+                                              // for now its async
+        }
         break;
       case Action::Return:
         instruction_number = CallStates.back().returnPoint;
@@ -184,6 +252,8 @@ signed char VM::evaluate(const Bytecode &code) {
       }
     }
   } catch (const VM_error &err) {
+    // catching runtime errors here. Unlike other errors, only one runtime error
+    // can be catched as the program cannot continue any work after that.
     std::cerr << "\nRuntime error: " << err.what()
               << " at line: " +
                      std::to_string(

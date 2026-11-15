@@ -1,16 +1,19 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceRoot}/build/DoubleC",
-            "args": [],
-            "cwd": "${workspaceRoot}"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch (CDT GDB)",
+      "type": "gdb",
+      "request": "launch",
+      "program": "${workspaceRoot}/build/DoubleC",
+      "arguments": [],
+      "gdbpath": "gdb",
+      "cwd": "${workspaceRoot}",
+      "stopAtEntry": false,
+      "commands": [
+        "set print pretty on",
+        "python import sys; print('GDB Python version:', sys.version)"
+      ]
+    }
+  ]
 }

@@ -4,6 +4,7 @@
 
 size_t Generator::emit(Location location, const Action &action,
                        uint32_t operand) {
+
   auto index = code.code.size();
   code.code.emplace_back(Instruction(action, std::move(operand)));
   code.locations.push_back(std::move(location));
@@ -11,12 +12,14 @@ size_t Generator::emit(Location location, const Action &action,
 }
 
 void Generator::FinishJump(const size_t &instruction, const size_t &target) {
+
   code.code[instruction].operand = target;
 }
 
 void Generator::GenerateBody(const Program &program) { Generate(program); }
 
 void Generator::GenerateExpression(const Expression &expr) {
+
   switch (expr.ExpressionType) {
   case ExprType::exprValue:
     code.values.emplace_back(static_cast<const exprValue &>(expr).value);
@@ -37,10 +40,12 @@ void Generator::GenerateExpression(const Expression &expr) {
              [indexes.IDs[static_cast<const Variable &>(*assignment.left).id]]);
     return;
   }
-  case ExprType::Variable:
+  case ExprType::Variable: {
     emit(expr.location, Action::Load_Local,
          indexes.slots[indexes.IDs[static_cast<const Variable &>(expr).id]]);
+    // assigning a varible a slot that was provided by analyzer before
     return;
+  }
   case ExprType::Unary: {
     const Unary &unary = static_cast<const Unary &>(expr);
     auto op = utils::getOperatorAction(unary.op, false);
@@ -75,11 +80,13 @@ void Generator::GenerateExpression(const Expression &expr) {
 }
 
 void Generator::GenerateOutput(const Output &stmt) {
+
   GenerateExpression(*stmt.output);
   emit(stmt.location, Action::Print);
 }
 
 void Generator::GenerateInput(const Input &stmt) {
+
   emit(stmt.location, Action::Read, static_cast<uint32_t>(stmt.InputType));
   emit(stmt.input->location, Action::Store_Local,
        indexes
@@ -87,6 +94,7 @@ void Generator::GenerateInput(const Input &stmt) {
 }
 
 void Generator::GenerateIf(const IfStatement &stmt) {
+
   size_t escapejump;
   GenerateExpression(*stmt.expr);
   auto jump = emit(stmt.location, Action::JumpIfFalse);
@@ -105,6 +113,7 @@ void Generator::GenerateIf(const IfStatement &stmt) {
 }
 
 void Generator::GenerateWhile(const While &stmt) {
+
   size_t loopstart = code.code.size();
   GenerateExpression(*stmt.expr);
   auto jump = emit(stmt.location, Action::JumpIfFalse);
@@ -114,6 +123,7 @@ void Generator::GenerateWhile(const While &stmt) {
 }
 
 void Generator::GenerateFor(const For &stmt) {
+
   if (stmt.Initialvalue) {
     GenerateExpression(*stmt.Initialvalue);
     emit(stmt.location, Action::Store_Local,
@@ -162,12 +172,14 @@ void Generator::GenerateFunction(const FunctionStatement &stmt) {
 }
 
 void Generator::GenerateReturn(const ReturnStatement &stmt) {
+
   if (stmt.expr)
     GenerateExpression(*stmt.expr);
   emit(stmt.location, Action::Return, stmt.expr ? 1 : 0);
 }
 
 void Generator::Generate(const Program &program) {
+
   for (const auto &stmt : program.statements) {
     switch (stmt->StatementType) {
     case StmtType::ExpressionStmt:
@@ -192,7 +204,7 @@ void Generator::Generate(const Program &program) {
       break;
     case StmtType::FunctionStatement:
       emit(stmt->location, Action::PushFunction, code.functionsinfo.size());
-      code.functionsinfo.push_back(FunctionInfo{0});
+      code.functionsinfo.push_back(FunctionInfo{});
       AllFunctions.push_back(&static_cast<const FunctionStatement &>(*stmt));
       break;
     case StmtType::ReturnStatement:
@@ -205,13 +217,21 @@ void Generator::Generate(const Program &program) {
   return;
 }
 
-const Bytecode &Generator::StartGeneration(const Program &program) {
+Bytecode &Generator::StartGeneration(const Program &program) {
   Generate(program);
   emit(Location(SIZE_MAX, SIZE_MAX), Action::Halt);
+  // placing functions after everything (after the HALT instruction), once the
+  // functions get called a jump action would point on them
   for (size_t i = 0; i < AllFunctions.size(); i++) {
     code.functionsinfo[i].entry = code.code.size();
-    code.functionsinfo[i].slot = indexes.FunctionSlots[AllFunctions[i]->id];
+    code.functionsinfo[i].slot =
+        indexes
+            .FunctionSlots[AllFunctions[i]->id]; // functions have its own array
+                                                 // of slots, same as variables
+    code.functionsinfo[i].numberofparams = AllFunctions[i]->params.size();
+    code.functionsinfo[i].mods = AllFunctions[i]->mods;
     GenerateFunction(*AllFunctions[i]);
+    code.functionsinfo[i].exit = code.code.size();
   }
   return code;
 }

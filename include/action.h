@@ -1,5 +1,10 @@
 #pragma once
 #include <cstdint>
+
+/**
+ * Action - main component of the bytecode instruction, it tells what the
+ * instruction is supposed to do
+ */
 enum class Action : uint8_t {
   Push_Value,
 

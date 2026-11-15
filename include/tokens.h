@@ -1,6 +1,12 @@
+/**
+ * Token structure defined here, the lexer gives a std::vector of these after
+ * the it finishes the work
+ */
 #pragma once
 #include <cstdint>
 #include <string>
+
+/// all the types of tokens
 enum class TokenType : uint8_t {
   Identifier,
   Keyword,
@@ -15,6 +21,7 @@ enum class TokenType : uint8_t {
   Invalid
 };
 
+/// all the possible keywords
 enum class Keyword : uint8_t {
   If,
   Else,
@@ -42,9 +49,10 @@ enum class Keyword : uint8_t {
   Global,
   Dynamic,
   Const,
+  JIT,
   Invalid
 };
-
+/// all the possible separator types
 enum class Separator : uint8_t {
   LeftParenthesis,
   RightParenthesis,
@@ -58,6 +66,13 @@ enum class Separator : uint8_t {
   Invalid
 };
 
+/**
+ * the basic token structure here. It stores the type of the token, which are
+ * listed above, value stores the index of a specific type to determine the
+ * exact element lexeme is the original value, it is also important to store
+ * the variable names. LineID and columnID are the original locations of the
+ * element, they will be used to print errors in the future.
+ */
 struct Token {
   TokenType type;
   uint8_t value;
@@ -69,6 +84,7 @@ struct Token {
   inline ~Token() = default;
 };
 
+/// main constructor of the token
 inline Token::Token(TokenType type, const uint8_t &value, std::string lexeme,
                     size_t lineID, size_t columnID) {
   this->type = type;

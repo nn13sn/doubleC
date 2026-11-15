@@ -8,8 +8,11 @@
 #include <unordered_map>
 
 struct AnalyzerEnv {
+  /// default constructor
   AnalyzerEnv() {};
+  /// constructor for slot table
   AnalyzerEnv(Slot_Table *table) : table(table) {};
+  /// constructor for new scope
   AnalyzerEnv(std::unordered_map<std::string, AnalyzerVariable> vars,
               AnalyzerEnv *par)
       : variables(vars), parent(par) {
@@ -21,8 +24,9 @@ struct AnalyzerEnv {
   std::unordered_map<std::string, Analyzer_function> Functions = {};
   AnalyzerEnv *parent = nullptr;
   Slot_Table *table;
-
+  /// checks if the variable already exists and gives the correct slot
   AnalyzerVariable *exists(const std::string &name);
+  /// defines a new variable and creates a slot for it
   void Define(const int32_t &mods, const std::string &name,
               std::vector<SemanticError> &errors, const Location &loc) {
     if (auto a = exists(name)) {
@@ -31,11 +35,13 @@ struct AnalyzerEnv {
     }
     table->IDs.push_back(table->nextID++);
     table->slots.push_back(table->nextSlot++);
+
     if (utils::isGlobal(mods))
       globals.insert({name, AnalyzerVariable(mods, table->IDs.size() - 1)});
     else
       variables.insert({name, AnalyzerVariable(mods, table->IDs.size() - 1)});
   }
+  /// defines a new function and creates a slot for it
   void DefineFunction(const FunctionStatement &func) {
     if (auto a = existFunction(func.name, false)) {
       a->params = func.params.size();
@@ -47,6 +53,7 @@ struct AnalyzerEnv {
     Functions.insert(
         {func.name, Analyzer_function(a, func.params.size(), func.mods)});
   }
+  /// checks if the function exists and gives the proper slot
   Analyzer_function *existFunction(const std::string &name,
                                    bool isCall = true) {
     if (auto a = Functions.find(name); a != Functions.end()) {
@@ -64,6 +71,7 @@ inline AnalyzerVariable *AnalyzerEnv::exists(const std::string &name) {
   if (auto a = globals.find(name); a != globals.end())
     return &a->second;
   if (auto a = variables.find(name); a != variables.end()) {
+
     table->IDs.push_back(table->IDs[a->second.ID]);
     return &a->second;
   }

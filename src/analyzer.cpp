@@ -5,6 +5,7 @@
 #include "utils.h"
 
 void Analyzer::AnalyzeExpression(const Expression &expr) {
+
   switch (expr.ExpressionType) {
   case ExprType::Variable: {
     if (!ignoreVariables &&
@@ -55,12 +56,14 @@ void Analyzer::AnalyzeAssignment(const Assignment &expr) {
     errors.push_back(
         SemanticError("The definition operator can only be used to variables",
                       expr.location));
-  AnalyzeExpression(*expr.right);
+
   env->Define(currentmodifiers, static_cast<const Variable &>(*expr.left).name,
               errors, expr.location);
+  AnalyzeExpression(*expr.right);
 }
 
 void Analyzer::AnalyzeUnary(const Unary &expr) {
+
   switch (expr.op) {
   case Operator::PreIncr:
   case Operator::PostIncr:
@@ -70,9 +73,9 @@ void Analyzer::AnalyzeUnary(const Unary &expr) {
                         expr.location));
     }
     AnalyzeExpression(*expr.expr);
-    if (env->exists(static_cast<const Variable &>(*expr.expr).name))
-      env->exists(static_cast<const Variable &>(*expr.expr).name)
-          ->isallowed(MOD_NONE, errors, expr.location);
+    // env->exists(static_cast<const Variable &>(*expr.expr).name);
+    //  env->exists(static_cast<const Variable &>(*expr.expr).name)
+    //->isallowed(MOD_NONE, errors, expr.location);
     return;
   case Operator::PreDecr:
   case Operator::PostDecr:
@@ -82,9 +85,9 @@ void Analyzer::AnalyzeUnary(const Unary &expr) {
                         expr.location));
     }
     AnalyzeExpression(*expr.expr);
-    if (env->exists(static_cast<const Variable &>(*expr.expr).name))
-      env->exists(static_cast<const Variable &>(*expr.expr).name)
-          ->isallowed(MOD_NONE, errors, expr.location);
+    // env->exists(static_cast<const Variable &>(*expr.expr).name);
+    //  env->exists(static_cast<const Variable &>(*expr.expr).name)
+    //->isallowed(MOD_NONE, errors, expr.location);
     return;
   default:
     return AnalyzeExpression(*expr.expr);
@@ -131,6 +134,7 @@ void Analyzer::AnalyzeIf(const IfStatement &stmt) {
 }
 
 void Analyzer::AnalyzeFor(const For &stmt) {
+
   bool prev = insideLoop;
   insideLoop = true;
   newScope();
@@ -168,9 +172,9 @@ void Analyzer::AnalyzeFunction(const FunctionStatement &stmt) {
     previous |= ignoreVariables;
     ignoreVariables = true;
   }*/
+  env = new AnalyzerEnv({}, env);
   previous |= insidefunction << 1;
   insidefunction = true;
-  newScope();
   for (size_t i = 0; i < stmt.params.size(); i++) {
     if (!utils::CheckModifiers(stmt.params[i]))
       errors.emplace_back("Parameter number " + std::to_string(i + 1) +
@@ -181,9 +185,11 @@ void Analyzer::AnalyzeFunction(const FunctionStatement &stmt) {
                 stmt.params[i].var.name, errors, stmt.location);
   }
   analyze(*stmt.Instructions);
+  auto envcopy = env->parent;
+  delete env;
+  env = envcopy;
   insidefunction = previous & 0b10;
   // ignoreVariables = previous & 0b01;
-  removeScope();
 }
 
 void Analyzer::AnalyzeReturn(const ReturnStatement &stmt) {
@@ -194,6 +200,7 @@ void Analyzer::AnalyzeReturn(const ReturnStatement &stmt) {
 }
 
 void Analyzer::AnalyzeBlock(const BlockStatement &stmt) {
+
   newScope();
   analyze(*stmt.instructions);
   removeScope();
@@ -259,14 +266,20 @@ void Analyzer::printErrors() {
 }
 
 void Analyzer::newScope() {
+
   env = new AnalyzerEnv({}, env);
+  if (insidefunction)
+    return;
   Scopestats.push_back(table.nextSlot);
 }
 
 void Analyzer::removeScope() {
+
   auto envcopy = env->parent;
   delete env;
   env = envcopy;
+  if (insidefunction)
+    return;
   table.nextSlot = Scopestats.back();
   Scopestats.pop_back();
 }

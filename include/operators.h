@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+
+/// All of the operator types
 enum class Operator : uint8_t {
   Add,
   Sub,
