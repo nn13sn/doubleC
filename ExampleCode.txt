@@ -1,24 +1,14 @@
-function Abcd(a,b,c){
-out(a)
-out(b)
-out(c)
-out("check123\n")
-return 345 
+result = 0
+
+jit function calculate(a, b) {
+    result = result +  (a * 31 + b * 17) % 100003
+}
+i = 0
+while (i < 1000000) {
+     calculate(i % 1000, i % 500)
+    i++
 }
 
+out(result)
 
 
-
-function sum(a,b){
-out("checksum\n")
-out(Abcd(10,20,30))
-}
-
-
-i = 5
-while(i>0) {
-out(sum(i, 2))
---i
-}
-
-Abcd(5,6,7)

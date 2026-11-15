@@ -2,6 +2,7 @@
 #include "AST.h"
 #include <string>
 
+/// parser error, holds an error and location
 struct ParserError {
   std::string err;
   Location loc;

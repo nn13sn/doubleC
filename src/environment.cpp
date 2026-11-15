@@ -28,6 +28,7 @@ RuntimeVariable *Environment::getPointer(const uint32_t &index) {
 
 void Environment::set(const uint32_t &index, const RuntimeValue &value,
                       const int32_t &mods) {
+
   auto cpvalue = value;
   realvalues[index].datatype = static_cast<int64_t>(cpvalue.getType());
   cpvalue.convertToBits();

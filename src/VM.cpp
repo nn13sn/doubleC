@@ -1,11 +1,14 @@
 #include "VM.h"
+#include "AST.h"
 #include "JIT_value.h"
 #include "JITframe.h"
 #include "callstate.h"
+#include "function_info.h"
 #include "runtime_cast.h"
 #include "runtime_operations.h"
 #include "runtime_streams.h"
 #include "vm_error.h"
+#include <atomic>
 #include <memory>
 
 VM::VM(const uint32_t &size, const size_t &funcsize) {
@@ -13,24 +16,48 @@ VM::VM(const uint32_t &size, const size_t &funcsize) {
   envptr = env;
 }
 
+VM::~VM() {
+
+  for (auto &func : env->functions) {
+    if (func.compile_thread.joinable())
+      func.compile_thread.join();
+  }
+}
+
 void VM::getCompiled(const size_t &funcid) {
-  env->functions[funcid].compversion = compiler->CompileFunc(
-      env->functions[funcid].entry, env->functions[funcid].exit,
-      env->functions[funcid].numberofparams);
+
+  auto &func = env->functions[funcid];
+
+  if (func.compiledstate != NOT_COMPILED)
+    return;
+
+  func.compiledstate = COMPILING;
+
+  func.compile_thread = std::thread([this, funcid]() {
+    auto &f = env->functions[funcid];
+
+    f.compversion = compiler->CompileFunc(f.entry, f.exit, f.numberofparams);
+
+    f.compiledstate.store(COMPILED, std::memory_order_release);
+
+    f.sync->cv.notify_all();
+  });
 }
 
 template <typename OperationFunc> void VM::BinaryOperation(OperationFunc func) {
+
   auto right = stack.Pop();
   auto left = stack.Pop();
   stack.Push(func(left, right));
 }
 
 template <typename OperationFunc> void VM::UnaryOperation(OperationFunc func) {
+
   auto value = stack.Pop();
   stack.Push(func(value));
 }
 
-signed char VM::evaluate(const Bytecode &code) {
+signed char VM::evaluate(Bytecode &code) {
   compiler = std::make_unique<Compiler>(code, env);
   try {
     while (instruction_number < code.code.size()) {
@@ -174,12 +201,19 @@ signed char VM::evaluate(const Bytecode &code) {
         env->set(ForStates.back().iterator, ForStates.back().start, 0);
         ForStates.pop_back();
         break;
-      case Action::PushFunction:
-        env->functions[code.functionsinfo[instruction.operand].slot] =
-            code.functionsinfo[instruction.operand];
+      case Action::PushFunction: {
+        auto slot = code.functionsinfo[instruction.operand].slot;
+        env->functions[slot] =
+            std::move(code.functionsinfo[instruction.operand]);
         break;
+      }
       case Action::CallFunction:
-        if (env->functions[instruction.operand].compversion) {
+        if (env->functions[instruction.operand].compiledstate.load(
+                std::memory_order_acquire) == COMPILED) {
+          if (!env->functions[instruction.operand].threadjoined) {
+            env->functions[instruction.operand].compile_thread.join();
+            env->functions[instruction.operand].threadjoined = true;
+          }
           JITFrame *ptr = new JITFrame();
           std::vector<JITvalue> stackcopy;
           for (size_t i = 0;
@@ -197,13 +231,12 @@ signed char VM::evaluate(const Bytecode &code) {
           delete ptr->return_value;
           delete ptr;
         } else {
-          std::cerr << "Interpreter version: \n";
+          // std::cerr << "Interpreter version: \n";
           CallStates.push_back(CallState{instruction_number});
           instruction_number = env->functions[instruction.operand].entry;
-          getCompiled(
-              instruction
-                  .operand); // it should be synchronical, but for now its async
-          std::cerr << "After interpreter version: \n";
+          if (env->functions[instruction.operand].mods & MOD_JIT)
+            getCompiled(instruction.operand); // it should be synchronical, but
+                                              // for now its async
         }
         break;
       case Action::Return:
@@ -219,6 +252,8 @@ signed char VM::evaluate(const Bytecode &code) {
       }
     }
   } catch (const VM_error &err) {
+    // catching runtime errors here. Unlike other errors, only one runtime error
+    // can be catched as the program cannot continue any work after that.
     std::cerr << "\nRuntime error: " << err.what()
               << " at line: " +
                      std::to_string(

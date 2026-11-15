@@ -4,6 +4,13 @@
 #include "jitforstate.h"
 #include "runtime_value.h"
 #include <cstddef>
+
+/**
+ * A structure that is passed to the compiled function when its called. It
+ * stores the pointers too all essential structures and arrays which are needed
+ * for the compiled function to properly work. The pointer to the jitframe is
+ * stored in r12 register.
+ */
 struct JITFrame {
   RuntimeValue *return_value;
   JITvalue *envptr;
@@ -11,8 +18,6 @@ struct JITFrame {
   JITForState *forptr = nullptr;
   bool interpretatorcall = true;
 };
-
-inline JITFrame emptyframe{nullptr, nullptr, nullptr, nullptr, false};
 
 static_assert(offsetof(JITFrame, return_value) == 0);
 static_assert(offsetof(JITFrame, envptr) == 8);

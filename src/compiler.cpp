@@ -4,15 +4,20 @@
 #include "asmjit/core/code_holder.h"
 #include "asmjit/x86/x86_assembler.h"
 #include "asmjit/x86/x86_operand.h"
+#include "function_info.h"
 #include "runtimeJIT_operations.h"
 #include "runtime_cast.h"
 #include "stack.h"
+#include <atomic>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include <stdexcept>
 
-void Compiler::Push(asmjit::x86::Assembler &myasm) {
-  auto &data = bytecode.values[instruction->operand];
+void Compiler::Push(asmjit::x86::Assembler &myasm,
+                    CompilationContext &context) {
+
+  auto &data = bytecode.values[context.instruction->operand];
   switch (data.getType()) {
   case Datatype::Int:
     myasm.mov(asmjit::x86::rax, static_cast<int64_t>(Datatype::Int));
@@ -63,14 +68,15 @@ void Compiler::Pop(asmjit::x86::Assembler &myasm) {
   myasm.pop(asmjit::x86::rcx); // data type
 }
 
-void Compiler::Return(asmjit::x86::Assembler &myasm) {
+void Compiler::Return(asmjit::x86::Assembler &myasm,
+                      CompilationContext &context) {
   myasm.cmp(asmjit::x86::byte_ptr(asmjit::x86::r12, 32), 0);
   auto frominterpreter = myasm.new_label();
   myasm.jne(frominterpreter);
   myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12));
   myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), 0);
   myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 8), 0);
-  if (instruction->operand) {
+  if (context.instruction->operand) {
     myasm.pop(asmjit::x86::rsi);
     myasm.pop(asmjit::x86::rdi);
     myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), asmjit::x86::rsi);
@@ -79,7 +85,7 @@ void Compiler::Return(asmjit::x86::Assembler &myasm) {
   myasm.pop(asmjit::x86::r12);
   myasm.ret();
   myasm.bind(frominterpreter);
-  if (instruction->operand) {
+  if (context.instruction->operand) {
     myasm.pop(asmjit::x86::rsi);
     myasm.pop(asmjit::x86::rdi);
     myasm.mov(asmjit::x86::rdx, asmjit::x86::qword_ptr(asmjit::x86::r12));
@@ -92,15 +98,15 @@ void Compiler::Return(asmjit::x86::Assembler &myasm) {
 
 void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
                              asmjit::x86::Assembler &myasm, const size_t &from,
-                             const size_t &to) {
+                             const size_t &to, CompilationContext &context) {
   for (size_t i = from; i < to; i++) {
     myasm.bind(labels[i - from]);
-    instruction = &bytecode.code[i];
+    context.instruction = &bytecode.code[i];
     myasm.mov(asmjit::x86::rax, instruction_address);
     myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), i);
-    switch (instruction->action) {
+    switch (context.instruction->action) {
     case Action::Push_Value:
-      Push(myasm);
+      Push(myasm, context);
       break;
     case Action::Pop:
       Pop(myasm);
@@ -145,37 +151,37 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       RuntimeJITOperations::neg(myasm);
       break;
     case Action::PreIncr:
-      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rdi, context.instruction->operand);
       RuntimeJITOperations::preincr(myasm);
       break;
     case Action::PostIncr:
-      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rdi, context.instruction->operand);
       RuntimeJITOperations::postincr(myasm);
       break;
     case Action::PreDecr:
-      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rdi, context.instruction->operand);
       RuntimeJITOperations::predecr(myasm);
       break;
     case Action::PostDecr:
-      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rdi, context.instruction->operand);
       RuntimeJITOperations::postdecr(myasm);
       break;
     case Action::Return:
-      Return(myasm);
+      Return(myasm, context);
       break;
     case Action::Cast:
-      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rdi, context.instruction->operand);
       RuntimeJITOperations::cast(myasm);
       break;
     case Action::Load_Local:
-      myasm.mov(asmjit::x86::rax, instruction->operand);
+      myasm.mov(asmjit::x86::rax, context.instruction->operand);
       myasm.shl(asmjit::x86::rax, 4);
       myasm.add(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 8));
       myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rax));
       myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rax, 8));
       break;
     case Action::Store_Local:
-      myasm.mov(asmjit::x86::rax, instruction->operand);
+      myasm.mov(asmjit::x86::rax, context.instruction->operand);
       myasm.shl(asmjit::x86::rax, 4);
       myasm.add(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 8));
       myasm.mov(asmjit::x86::rdi, asmjit::x86::qword_ptr(asmjit::x86::rsp));
@@ -184,7 +190,7 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), asmjit::x86::rdi);
       break;
     case Action::DefaultInit:
-      myasm.mov(asmjit::x86::rax, instruction->operand);
+      myasm.mov(asmjit::x86::rax, context.instruction->operand);
       myasm.shl(asmjit::x86::rax, 4);
       myasm.add(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 8));
       myasm.cmp(asmjit::x86::qword_ptr(asmjit::x86::rax), 7); // invalid
@@ -194,15 +200,15 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 8), 0);
       break;
     case Action::Jump:
-      myasm.jmp(labels[instruction->operand - from]);
+      myasm.jmp(labels[context.instruction->operand - from]);
       break;
     case Action::JumpIfFalse:
       Pop(myasm);
       myasm.test(asmjit::x86::rax, asmjit::x86::rax);
-      myasm.jz(labels[instruction->operand - from]);
+      myasm.jz(labels[context.instruction->operand - from]);
       break;
     case Action::Read:
-      myasm.mov(asmjit::x86::rdi, instruction->operand);
+      myasm.mov(asmjit::x86::rdi, context.instruction->operand);
       myasm.mov(asmjit::x86::rax, input_address);
       myasm.call(input_address);
       break;
@@ -217,8 +223,8 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.call(asmjit::x86::rax);
       myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 24));
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 16),
-                instruction->operand >> 2);
-      myasm.mov(asmjit::x86::rcx, instruction->operand >> 2);
+                context.instruction->operand >> 2);
+      myasm.mov(asmjit::x86::rcx, context.instruction->operand >> 2);
       myasm.shl(asmjit::x86::rcx, 4);
       myasm.add(asmjit::x86::rcx, asmjit::x86::qword_ptr(asmjit::x86::r12, 8));
       myasm.mov(asmjit::x86::rdx, asmjit::x86::qword_ptr(asmjit::x86::rcx));
@@ -229,13 +235,13 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax), asmjit::x86::rcx);
       myasm.mov(asmjit::x86::rcx, asmjit::x86::qword_ptr(asmjit::x86::rsp));
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rax, 8), asmjit::x86::rcx);
-      notsmart.push_back(false);
-      if ((instruction->operand & 0b11) == 1)
+      context.notsmart.push_back(false);
+      if ((context.instruction->operand & 0b11) == 1)
         myasm.mov(asmjit::x86::byte_ptr(asmjit::x86::rax, 25), 0);
-      else if ((instruction->operand & 0b11) == 2)
+      else if ((context.instruction->operand & 0b11) == 2)
         myasm.mov(asmjit::x86::byte_ptr(asmjit::x86::rax, 25), 1);
       else {
-        notsmart.back() = true;
+        context.notsmart.back() = true;
         Pop(myasm); // deleting start and the end because forcheck will push
                     // them again
         Pop(myasm);
@@ -257,7 +263,7 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.mov(asmjit::x86::rax, asmjit::x86::qword_ptr(asmjit::x86::r12, 24));
       myasm.push(asmjit::x86::qword_ptr((asmjit::x86::rax)));
       myasm.push(asmjit::x86::qword_ptr(asmjit::x86::rax, 8));
-      if (notsmart.back())
+      if (context.notsmart.back())
         break;
       myasm.xor_(asmjit::x86::rcx, asmjit::x86::rcx);
       myasm.mov(asmjit::x86::cl, asmjit::x86::byte_ptr(asmjit::x86::rax, 24));
@@ -313,24 +319,40 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.mov(asmjit::x86::qword_ptr(asmjit::x86::rcx, 8), asmjit::x86::rdx);
       myasm.mov(asmjit::x86::rax, forend_address);
       myasm.call(asmjit::x86::rax);
-      notsmart.pop_back();
+      context.notsmart.pop_back();
       break;
     case Action::CallFunction: {
-      if (!envptr->functions[instruction->operand].compversion) {
-        auto instructioncopy = instruction;
-        envptr->functions[instruction->operand].compversion =
-            CompileFunc(envptr->functions[instruction->operand].entry,
-                        envptr->functions[instruction->operand].exit,
-                        envptr->functions[instruction->operand].numberofparams);
-        instruction = instructioncopy;
+      if (envptr->functions[context.instruction->operand].compiledstate.load(
+              std::memory_order_acquire) == COMPILING) {
+        std::unique_lock lock(
+            envptr->functions[context.instruction->operand].sync->mutex);
+
+        envptr->functions[context.instruction->operand].sync->cv.wait(
+            lock, [&]() {
+              return envptr->functions[context.instruction->operand]
+                         .compiledstate.load(std::memory_order_acquire) !=
+                     COMPILING;
+            });
+      } else if (envptr->functions[context.instruction->operand]
+                     .compiledstate.load(std::memory_order_acquire) !=
+                 COMPILED) {
+        envptr->functions[context.instruction->operand].compversion =
+            CompileFunc(
+                envptr->functions[context.instruction->operand].entry,
+                envptr->functions[context.instruction->operand].exit,
+                envptr->functions[context.instruction->operand].numberofparams);
+        envptr->functions[context.instruction->operand].compiledstate.store(
+            COMPILED, std::memory_order_release);
       }
-      auto paramnum = envptr->functions[instruction->operand].numberofparams;
+      auto paramnum =
+          envptr->functions[context.instruction->operand].numberofparams;
       if (paramnum == 0) {
         paramnum++;
         myasm.push(0);
         myasm.push(0);
       }
       myasm.mov(asmjit::x86::r8, asmjit::x86::rsp);
+      // pushing the forstate structure onto the stack
       myasm.sub(asmjit::x86::rsp, 1);
       myasm.mov(asmjit::x86::byte_ptr(asmjit::x86::rsp), 0);
       myasm.push(0);
@@ -338,19 +360,19 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
       myasm.mov(asmjit::x86::rax,
                 reinterpret_cast<uint64_t>(realvalues.data()));
       myasm.push(asmjit::x86::rax);
-      std::cout << "realvalues.data(): " << realvalues.data() << '\n';
       myasm.mov(asmjit::x86::rax, 16 * (paramnum - 1));
       myasm.add(asmjit::x86::rax, asmjit::x86::r8);
       myasm.push(asmjit::x86::rax);
       myasm.mov(asmjit::x86::rdi, asmjit::x86::rsp);
       myasm.mov(asmjit::x86::rax,
-                envptr->functions[instruction->operand].compversion);
+                envptr->functions[context.instruction->operand].compversion);
       myasm.call(asmjit::x86::rax);
       Pop(myasm);
       Pop(myasm);
       myasm.add(asmjit::x86::rsp, 1);
       for (size_t y = 1;
-           y < envptr->functions[instruction->operand].numberofparams; y++) {
+           y < envptr->functions[context.instruction->operand].numberofparams;
+           y++) {
         myasm.pop(asmjit::x86::rax);
         myasm.pop(asmjit::x86::rax);
       }
@@ -364,10 +386,13 @@ void Compiler::ParseBytecode(std::vector<asmjit::Label> &labels,
 
 JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
                                   const size_t &numberOfParams) {
-
+  CompilationContext context;
+  // std::cerr << "\nCompilation started\n";
   asmjit::CodeHolder code;
-  code.init(runtime.environment(), runtime.cpu_features());
-
+  {
+    std::lock_guard lock(runtime_mutex);
+    code.init(runtime.environment(), runtime.cpu_features());
+  }
   asmjit::x86::Assembler myasm(&code);
 
   std::vector<asmjit::Label> labels;
@@ -401,15 +426,18 @@ JITfunction Compiler::CompileFunc(const size_t &from, const size_t &to,
     labels.push_back(myasm.new_label());
   }
 
-  ParseBytecode(labels, myasm, from, to);
+  ParseBytecode(labels, myasm, from, to, context);
 
   myasm.pop(asmjit::x86::r12);
   myasm.ret();
   JITfunction func;
-  asmjit::Error err = runtime.add(&func, &code);
-  if (err != asmjit::Error::kOk) {
-    std::cout << static_cast<int64_t>(err);
-    throw std::invalid_argument("\nError");
+  {
+    std::lock_guard lock(runtime_mutex);
+    asmjit::Error err = runtime.add(&func, &code);
+    if (err != asmjit::Error::kOk) {
+      std::cout << static_cast<int64_t>(err);
+      throw std::invalid_argument("\nError");
+    }
   }
   return func;
 }

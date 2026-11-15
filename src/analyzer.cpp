@@ -5,6 +5,7 @@
 #include "utils.h"
 
 void Analyzer::AnalyzeExpression(const Expression &expr) {
+
   switch (expr.ExpressionType) {
   case ExprType::Variable: {
     if (!ignoreVariables &&
@@ -62,6 +63,7 @@ void Analyzer::AnalyzeAssignment(const Assignment &expr) {
 }
 
 void Analyzer::AnalyzeUnary(const Unary &expr) {
+
   switch (expr.op) {
   case Operator::PreIncr:
   case Operator::PostIncr:
@@ -132,6 +134,7 @@ void Analyzer::AnalyzeIf(const IfStatement &stmt) {
 }
 
 void Analyzer::AnalyzeFor(const For &stmt) {
+
   bool prev = insideLoop;
   insideLoop = true;
   newScope();
@@ -197,6 +200,7 @@ void Analyzer::AnalyzeReturn(const ReturnStatement &stmt) {
 }
 
 void Analyzer::AnalyzeBlock(const BlockStatement &stmt) {
+
   newScope();
   analyze(*stmt.instructions);
   removeScope();
@@ -262,6 +266,7 @@ void Analyzer::printErrors() {
 }
 
 void Analyzer::newScope() {
+
   env = new AnalyzerEnv({}, env);
   if (insidefunction)
     return;
@@ -269,6 +274,7 @@ void Analyzer::newScope() {
 }
 
 void Analyzer::removeScope() {
+
   auto envcopy = env->parent;
   delete env;
   env = envcopy;

@@ -1,6 +1,7 @@
 #include "error_handle.h"
 
 extern "C" void PrintError(size_t errorNum, size_t bytecodenum) {
+
   std::cerr << "\nRuntimeError : ";
   switch (errorNum) { // handling error number to the error
   case 1:

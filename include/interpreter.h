@@ -1,3 +1,6 @@
+/// no longer used, an old version of interpreter, now i use generator and a vm
+/// instead
+
 #pragma once
 #include "AST.h"
 #include "environment.h"

@@ -3,6 +3,7 @@
 #include "asmjit/x86/x86_assembler.h"
 namespace RuntimeJITOperations {
 extern "C" {
+// all the functions defined in assembly file
 void sumInt();
 void subInt();
 void mulInt();
@@ -22,7 +23,7 @@ void PostIncr();
 void PreDecr();
 void PostDecr();
 }
-
+// getting an adress to these functions
 inline auto sum_address = reinterpret_cast<uintptr_t>(&sumInt);
 inline auto sub_address = reinterpret_cast<uintptr_t>(&subInt);
 inline auto mul_address = reinterpret_cast<uintptr_t>(&mulInt);
@@ -42,6 +43,7 @@ inline auto postincr_address = reinterpret_cast<uintptr_t>(&PostIncr);
 inline auto predecr_address = reinterpret_cast<uintptr_t>(&PreDecr);
 inline auto postdecr_address = reinterpret_cast<uintptr_t>(&PostDecr);
 
+// these functions are a wrap over the call of asm functions
 void add(asmjit::x86::Assembler &myasm);
 void sub(asmjit::x86::Assembler &myasm);
 void mul(asmjit::x86::Assembler &myasm);

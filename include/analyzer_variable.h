@@ -4,12 +4,17 @@
 #include "slot_table.h"
 #include <cstdint>
 #include <vector>
+
+/// analyzer variable, only stores the id without the value
 struct AnalyzerVariable {
   uint32_t mods = MOD_NONE;
   uint32_t locked = 0;
   VariableID ID;
+  /// locks the variable(no longer used)
   inline void lock() { locked++; }
+  /// unlocks the variable (no longer used)
   inline void unlock() { locked--; }
+  /// checks if the variable is allowed to change
   inline bool isallowed(const uint32_t &mods,
                         std::vector<SemanticError> &errors,
                         const Location &loc) {
@@ -24,6 +29,7 @@ struct AnalyzerVariable {
                           loc);
     return false;
   }
+  /// main constructor
   AnalyzerVariable(const uint32_t &modifiers, const VariableID &ID)
       : mods(modifiers), ID(ID) {};
 };

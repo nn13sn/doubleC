@@ -10,7 +10,8 @@ extern JITInput
 extern PushFor 
 extern PopFor
 
-
+; all the function here are the ones that work with c++ functions
+; as their definition in assembly would be too long
 global ReturnValue
 global asmPrint
 global asmInput 

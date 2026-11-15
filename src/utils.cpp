@@ -2,6 +2,7 @@
 #include "runtime_value.h"
 #include "tokens.h"
 bool utils::isNumerical(const RuntimeValue &value) {
+
   if (value.getType() == Datatype::Int || value.getType() == Datatype::Char ||
       value.getType() == Datatype::Double || value.getType() == Datatype::Bool)
     return true;
@@ -9,6 +10,7 @@ bool utils::isNumerical(const RuntimeValue &value) {
 }
 
 bool utils::isLogical(const Operator &op) {
+
   if (op == Operator::Greater || op == Operator::GreaterEq ||
       op == Operator::Less || op == Operator::LessEq || op == Operator::Equal ||
       op == Operator::NotEqual)
@@ -17,6 +19,7 @@ bool utils::isLogical(const Operator &op) {
 }
 
 bool utils::isArrow(const Operator &op) {
+
   if (op == Operator::Arrow || op == Operator::ArrowEq)
     return true;
   return false;
@@ -36,7 +39,7 @@ bool utils::isModifier(const Token &token) {
     return false;
   auto keyword = static_cast<Keyword>(token.value);
   if (keyword == Keyword::Dynamic || keyword == Keyword::Global ||
-      keyword == Keyword::Const)
+      keyword == Keyword::Const || keyword == Keyword::JIT)
     return true;
   return false;
 }
@@ -44,8 +47,7 @@ bool utils::isModifier(const Token &token) {
 bool utils::CheckModifiers(const StmtType &type, const int32_t &modifiers) {
 
   if (modifiers & ~AllowedStmt[static_cast<size_t>(type)])
-    // the idea of creating a table of allowed is mine,
-    // but I had to research to make such if statement here
+
     return false;
   return true;
 }
@@ -81,6 +83,7 @@ bool utils::isConst(const int32_t &modifiers) {
 }
 
 Action utils::getOperatorAction(const Operator &op, const bool &binary) {
+
   switch (op) {
   case Operator::Add:
     return Action::Add;

@@ -18,11 +18,13 @@ void Lexer::readFile(std::string name) {
 }
 
 void Lexer::unexEnd() {
+
   if (pos == Initialcode[i].size())
     throw std::invalid_argument("Unexpected ending");
 }
 
 uint8_t Lexer::IsKeyword(const std::string_view lexeme) {
+  // matching the keyword
   for (size_t i = 0; i < keywords.size(); i++) {
     if (lexeme == keywords[i])
       return static_cast<uint8_t>(i);
@@ -31,6 +33,7 @@ uint8_t Lexer::IsKeyword(const std::string_view lexeme) {
 }
 
 char Lexer::getEscapes(const char &c) {
+
   switch (c) {
   case 'n':
     return '\n';
@@ -52,6 +55,7 @@ char Lexer::getEscapes(const char &c) {
 }
 
 bool Lexer::isLetter() {
+
   if (std::isalpha(Initialcode[i][pos]) || Initialcode[i][pos] == '_') {
     size_t startpos = pos;
     while (pos < Initialcode[i].size() &&
@@ -82,6 +86,7 @@ bool Lexer::isLetter() {
 }
 
 bool Lexer::isDigit() {
+
   size_t startpos = pos;
   if (std::isdigit(Initialcode[i][pos])) {
     while (pos < Initialcode[i].size() && (std::isdigit(Initialcode[i][pos]))) {
@@ -110,6 +115,7 @@ bool Lexer::isDigit() {
 }
 
 bool Lexer::isText() {
+
   if (Initialcode[i][pos] == '\'') {
     auto startpos = pos;
     pos++;
@@ -236,6 +242,7 @@ bool Lexer::isOperator() {
 }
 
 bool Lexer::isSeparator() {
+
   Separator sep = Separator::Invalid;
   switch (Initialcode[i][pos]) {
   case '(':
@@ -275,6 +282,7 @@ bool Lexer::isSeparator() {
 }
 
 std::vector<std::vector<Token>> Lexer::Tokenize() {
+
   for (i = 0; i < Initialcode.size(); i++) {
     try {
       if (Initialcode[i].size() == 0)

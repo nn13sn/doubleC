@@ -6,6 +6,7 @@ bool RuntimeCast::CanCast(const Datatype &from, const Datatype &to) {
 }
 
 Datatype RuntimeCast::CommonType(const Datatype &left, const Datatype &right) {
+
   if (left == Datatype::Double || right == Datatype::Double)
     return Datatype::Double;
   return Datatype::Int;

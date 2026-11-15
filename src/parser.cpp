@@ -12,6 +12,7 @@ const Token &Parser::advance() {
 }
 
 const Token &Parser::peekNext() {
+
   if (isEnd())
     SyntaxErr("Unexepected end of the line");
   return tokens[line][pos + 1];
@@ -45,6 +46,7 @@ bool Parser::Check(Separator sep) {
 }
 
 bool Parser::eatEnd() {
+
   if (Check(TokenType::End)) {
     line++;
     pos = 0;
@@ -54,6 +56,7 @@ bool Parser::eatEnd() {
 }
 
 bool Parser::getToBracket() {
+
   while (!isEnd()) {
     if (Check(Separator::LeftCurlyBracket))
       return true;
@@ -99,6 +102,7 @@ Datatype Parser::getDatatype(const Keyword &keyword) {
 std::variant<dc_int, dc_double, dc_char, dc_bool, dc_string,
              std::vector<Literal>>
 Parser::getData() {
+
   if (Check(TokenType::Number))
     return std::stoll(peek().lexeme);
   if (Check(TokenType::Double))
@@ -116,6 +120,7 @@ Parser::getData() {
 }
 
 void Parser::addModifier(int32_t &mods, const Keyword &keywrd) {
+
   switch (keywrd) {
   case Keyword::Global:
     if (mods & MOD_GLOBAL)
@@ -134,6 +139,12 @@ void Parser::addModifier(int32_t &mods, const Keyword &keywrd) {
       SyntaxErr("Duplication of const modifier");
     else
       mods |= MOD_CONST;
+    return;
+  case Keyword::JIT:
+    if (mods & MOD_JIT)
+      SyntaxErr("Duplication of jit modifier");
+    else
+      mods |= MOD_JIT;
     return;
   default:
     SyntaxErr("Unknown modifier");
@@ -176,6 +187,7 @@ std::unique_ptr<Program> Parser::MakeBody() {
 }
 
 std::unique_ptr<Expression> Parser::SingleParse() {
+
   if (Check(TokenType::Number) || Check(TokenType::Double) ||
       Check(TokenType::Boolean) || Check(TokenType::Symbol) ||
       Check(TokenType::String)) {
@@ -247,8 +259,7 @@ std::unique_ptr<Expression> Parser::SingleParse() {
   return nullptr;
 }
 
-template <typename LowFunc> // I made this method to avoid the code repetion
-                            // when parsing each level
+template <typename LowFunc>
 std::unique_ptr<Expression>
 Parser::ParseBinary(LowFunc ParseLower, const std::vector<Operator> &ops) {
   auto expr = ParseLower();
@@ -268,6 +279,7 @@ Parser::ParseBinary(LowFunc ParseLower, const std::vector<Operator> &ops) {
 }
 
 std::unique_ptr<Expression> Parser::MakeExpression() {
+
   auto expr = OrParse();
   if (Check(Operator::Def)) {
     auto def = std::make_unique<Assignment>();
@@ -317,6 +329,7 @@ std::unique_ptr<Expression> Parser::UnaryParse() {
     return unary;
   }
   auto expr = SingleParse();
+  // some unary operators can be after the element
   while (Check(Operator::PreIncr) || Check(Operator::PreDecr)) {
     auto unary = std::make_unique<Unary>();
     unary->ExpressionType = ExprType::Unary;
@@ -331,6 +344,7 @@ std::unique_ptr<Expression> Parser::UnaryParse() {
 }
 
 std::unique_ptr<Statement> Parser::ParseInput() {
+
   auto stmt = std::make_unique<Input>();
   stmt->StatementType = StmtType::Input;
   stmt->location.line = advance().lineID;
@@ -354,6 +368,7 @@ std::unique_ptr<Statement> Parser::ParseInput() {
 }
 
 std::unique_ptr<Statement> Parser::ParseOutput() {
+
   auto stmt = std::make_unique<Output>();
   stmt->StatementType = StmtType::Output;
   stmt->location.line = advance().lineID;
@@ -370,6 +385,7 @@ std::unique_ptr<Statement> Parser::ParseOutput() {
 }
 
 std::unique_ptr<Statement> Parser::ParseExpression() {
+
   auto stmt = std::make_unique<ExpressionStmt>();
   stmt->StatementType = StmtType::ExpressionStmt;
   stmt->location.line = peek().lineID;
@@ -379,6 +395,7 @@ std::unique_ptr<Statement> Parser::ParseExpression() {
 }
 
 std::unique_ptr<Statement> Parser::ParseBlock() {
+
   auto stmt = std::make_unique<BlockStatement>();
   stmt->location.line = advance().lineID;
   stmt->StatementType = StmtType::BlockStatement;
@@ -387,6 +404,7 @@ std::unique_ptr<Statement> Parser::ParseBlock() {
 }
 
 std::unique_ptr<Statement> Parser::ParseIfStatement() {
+
   auto stmt = std::make_unique<IfStatement>();
   stmt->StatementType = StmtType::IfStatement;
   stmt->location.line = advance().lineID;
@@ -496,6 +514,7 @@ std::unique_ptr<Statement> Parser::ParseFor() {
 }
 
 std::unique_ptr<Statement> Parser::ParseBreak() {
+
   auto stmt = std::make_unique<BreakStmt>();
   stmt->StatementType = StmtType::BreakStmt;
   stmt->location.column = peek().columnID;
@@ -618,6 +637,7 @@ std::unique_ptr<Statement> Parser::MakeStatement() {
 }
 
 signed char Parser::Parse(Program &program) {
+
   while (line < tokens.size()) {
     program.statements.push_back(MakeStatement());
     if (!eatEnd() && pos != 0) {
@@ -635,6 +655,7 @@ signed char Parser::Parse(Program &program) {
 }
 
 void Parser::printErrors() {
+
   std::cerr << "Syntax Error(s):\n";
   for (auto &err : errors) {
     std::cerr << "Line " << err.loc.line << ", column " << err.loc.column;

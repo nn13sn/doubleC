@@ -1,4 +1,5 @@
 #include "runtime_value.h"
+/// for state, used to store the information about the for loop
 struct ForState {
   RuntimeValue end;
   RuntimeValue start;

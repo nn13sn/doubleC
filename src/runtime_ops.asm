@@ -4,6 +4,7 @@ current_instruction: resq 1
 
 section .rodata 
 align 8 
+;maximum and minimum int64_t values, used to make secure operations
 int64_min: dq 0xC3E0000000000000  ; -2^63
 int64_max: dq 0x43E0000000000000 ; +2^63
 one: dq 1.0
@@ -12,6 +13,11 @@ section .text
 
 extern PrintError
 
+
+; all the operations function here, including arithmetical, logical and unary
+; all of the functions are quite similar. It is usually taking the values from the stack and applying a specific operation, 
+; and there is also a different version for double values, as it requires the usage of xmm registers and SIMD. At the end there is a runction that 
+; immitates the throw of a runtime error in c++, the external function that prints errors is called, and after the program ends with syscall
 global sumInt 
 global subInt  
 global mulInt  
