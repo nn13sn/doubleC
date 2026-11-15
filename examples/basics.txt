@@ -1,0 +1,5 @@
+out("Hello, world!\n")
+
+in(a)
+
+out(a)

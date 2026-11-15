@@ -1,0 +1,14 @@
+
+function sum(a,b)
+{
+    return a + b
+  }
+
+jit function Myfunc()
+{
+    out("\nI am getting compiled during the runtime.\n")
+  }
+
+out(sum(10, 20))
+
+Myfunc()

@@ -98,7 +98,8 @@ void RuntimeValue::convertToBits() {
     this->data = static_cast<int64_t>(std::get<dc_bool>(this->data));
     break;
   case Datatype::String:
-    this->data = std::bit_cast<int64_t>(&std::get<dc_string>(this->data));
+    realstrings.push_back(std::get<dc_string>(this->data));
+    this->data = static_cast<int64_t>(realstrings.size() - 1);
     break;
   default:
     break;
@@ -123,7 +124,7 @@ void RuntimeValue::convertToValue() {
     this->data = static_cast<dc_bool>(adress->value);
     break;
   case Datatype::String:
-    this->data = *std::bit_cast<dc_string *>(adress->value);
+    this->data = realstrings[adress->value];
     break;
   default:
     break;

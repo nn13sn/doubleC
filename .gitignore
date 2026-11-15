@@ -12,3 +12,5 @@ cmake_install.cmake
 src/interpreter.cpp
 include/interpreter.h
 include/interpreter_error.h
+package/
+.clangd

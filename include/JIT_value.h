@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
-
 /// jit value - stores datatype and bit representation of the value
 struct JITvalue {
   int64_t datatype;
@@ -14,3 +14,5 @@ struct JITvalue {
  * versions of the functions.
  */
 inline std::vector<JITvalue> realvalues;
+
+inline std::vector<std::string> realstrings{};

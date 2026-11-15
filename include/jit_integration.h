@@ -15,7 +15,7 @@ void ReturnChar(RuntimeValue *result, dc_char value);
 /// function to call if the return data type is bool
 void ReturnBool(RuntimeValue *result, dc_bool value);
 /// function to call if the return data type is string
-void ReturnString(RuntimeValue *result, dc_string *value);
+void ReturnString(RuntimeValue *result, dc_int value);
 /// output function, std::cout basically
 void JITPrint(int64_t datatype, int64_t value);
 /// input function, std::cin basically

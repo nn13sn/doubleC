@@ -1,0 +1,24 @@
+
+in(amount) -> int 
+
+i = 0
+
+out("While loop: \n")
+
+while(i < amount)
+{
+    out("iteration|")
+    i++
+  }
+
+out("\nFor loop: \n")
+
+for(itr -> amount){
+    out("iteration|")
+  }
+
+out("\nExtended For loop: \n")
+
+for(itr = 0->amount : ++itr){
+    out("iteration|")
+  }

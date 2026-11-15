@@ -1,4 +1,5 @@
 #include "jit_integration.h"
+#include "JIT_value.h"
 #include "jitforstate.h"
 #include "runtime_streams.h"
 #include <bit>
@@ -20,8 +21,8 @@ void ReturnBool(RuntimeValue *result, dc_bool value) {
   *result = RuntimeValue(Datatype::Bool, value);
 }
 
-void ReturnString(RuntimeValue *result, dc_string *value) {
-  *result = RuntimeValue(Datatype::String, *value);
+void ReturnString(RuntimeValue *result, dc_int value) {
+  *result = RuntimeValue(Datatype::String, realstrings[value]);
 }
 
 void JITPrint(int64_t datatype, int64_t value) {
@@ -39,7 +40,7 @@ void JITPrint(int64_t datatype, int64_t value) {
     RuntimeStreams::PrintValue(static_cast<dc_bool>(value));
     return;
   case 4:
-    RuntimeStreams::PrintValue(*std::bit_cast<dc_string *>(value));
+    RuntimeStreams::PrintValue(realstrings[value]);
     return;
   }
 }

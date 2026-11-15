@@ -1,0 +1,25 @@
+a = 10 
+b = 20
+
+out(a + b)
+out("\n")
+
+a = 1.2345
+
+out(a)
+out("\n")
+
+a = true 
+
+out(a)
+out("\n")
+
+a = "stringAbcd"
+
+out(a)
+out("\n")
+
+a = 'a'
+
+out(a)
+out("\n")

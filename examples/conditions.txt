@@ -1,0 +1,14 @@
+
+
+in(age) -> int 
+
+if(age >= 100) {
+    out("Age is not realistic!\n")
+  }
+else if (age <= 18)
+{
+    out("You are a child!\n")
+  }
+else {
+    out("You are an adult!\n")
+  }

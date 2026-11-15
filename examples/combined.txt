@@ -1,0 +1,19 @@
+
+jit function sum(a, b, c)
+{
+    return a + b + c 
+  }
+
+a = 123
+
+for(i->100){
+    for(y->100){
+        out(sum(i, y, a))
+        if(a < 200){
+              a = a * 2
+          }
+        else {
+            a = a - 200
+          }
+      }
+  }
