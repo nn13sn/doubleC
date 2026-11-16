@@ -330,7 +330,15 @@ DoubleC uses a custom execution engine consisting of a bytecode virtual machine 
 ## 7.1 Interpretation Pipeline
 
 The interpretation includes 5 main stages - lexer, parser, analyzer, generator and a VM. 
-Each stage does it's specific task with the information provided by the previous stage. For more detailed architecture check out the source code, I provided some comments in header files. However I plan to create a different file with architecture explanation.
+Each stage does it's specific task with the information provided by the previous stage. For more detailed architecture check out the source code, I provided some comments in header files. 
+
+- The general architecture diagram:
+  
+<p align="center">
+  <img src="assets/architecture.png" width="700" alt="Centered image">
+</p>
+
+
 
 ## 7.2 Bytecode Virtual Machine
 
