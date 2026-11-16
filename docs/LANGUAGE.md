@@ -93,7 +93,7 @@ out("Hello, world!\n")
 **Execution:**
 
 <p align="center">
-  <img src="assets/basics.png" width="300" alt="Centered image">
+  <img src="assets/basics.png" width="600" alt="Centered image">
 </p>
 
 ## 2.4 Input and Output
@@ -151,7 +151,7 @@ a = "string"
 ```
 
 <p align="center">
-  <img src="assets/variables.png" width="300" alt="Centered image">
+  <img src="assets/variables.png" width="600" alt="Centered image">
 </p>
 
 ## 3.5 Type Conversion
@@ -254,7 +254,7 @@ else {
 ```
 
 <p align="center">
-  <img src="assets/conditions.png" width="300" alt="Centered image">
+  <img src="assets/conditions.png" width="600" alt="Centered image">
 </p>
 
 ## 5.2 While Loops
@@ -282,7 +282,7 @@ for(itr -> 10) {
 ```
 
 <p align="center">
-  <img src="assets/loops.png" width="300" alt="Centered image">
+  <img src="assets/loops.png" width="600" alt="Centered image">
 </p>
 
 # 6. Functions
@@ -318,7 +318,7 @@ jit function Myfunc() {
 ```
 
 <p align="center">
-  <img src="assets/functions.png" width="300" alt="Centered image">
+  <img src="assets/functions.png" width="600" alt="Centered image">
 </p>
 
 ---
@@ -377,7 +377,7 @@ This program summarizes most of the features of DoubleC. The point of the code i
 ## 8.3 Execution Result
 
 <p align="center">
-  <img src="assets/combined.png" width="300" alt="Centered image">
+  <img src="assets/combined.png" width="600" alt="Centered image">
 </p>
 
 ---
