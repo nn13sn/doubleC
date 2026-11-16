@@ -18,9 +18,9 @@ This documentation describes the syntax, features, and runtime behavior of the D
 4. [Operators](#4-operators)
 5. [Control Flow](#5-control-flow)
 6. [Functions](#6-functions)
-7. [Execution Model](#8-execution-model)
-8. [Complete Example](#9-complete-example)
-9. [Limitations and Project Status](#10-limitations-and-project-status)
+7. [Execution Model](#7-execution-model)
+8. [Complete Example](#8-complete-example)
+9. [Limitations and Project Status](#9-limitations-and-project-status)
 
 ---
 
