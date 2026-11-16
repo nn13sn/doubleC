@@ -6,6 +6,8 @@ DoubleC is an experimental programming language developed from scratch in C++20.
 
 Unlike a direct implementation of an existing language, DoubleC has its own syntax and semantics. Its execution engine combines a custom bytecode virtual machine with an optional JIT compiler that translates supported functions into native x86-64 machine code.
 
+**No AI coding was involved, the whole project is handcoded as it was first developed for the improvement of the author's skills and knowledge.**
+
 ## Overview
 
 DoubleC currently includes:
@@ -58,7 +60,7 @@ Download the latest release:
 [Releases](https://github.com/nn13sn/doubleC/releases)
 
 
-For more information see 
+For more information see:
 [Language Documentation](docs/LANGUAGE.md)
 
 
@@ -103,7 +105,7 @@ cmake --build build --parallel
 
 <em>Experimental — under active development.</em>
 
-DoubleC is a work in progress. Its core components, including the bytecode virtual machine and JIT compiler, are implemented, but the language and runtime are still evolving.
+DoubleC is a work in progress. Its core components, including the bytecode virtual machine and JIT compiler, are implemented, but the language and runtime are still evolving. Author is happy to receive any help including advices, questions and opinions!
 
 **Current platform:** Linux x86-64.
 
