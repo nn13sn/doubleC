@@ -92,7 +92,9 @@ out("Hello, world!\n")
 
 **Execution:**
 
-![Hello World execution](assets/basics.png)
+<p align="center">
+  <img src="assets/basics.png" width="300" alt="Centered image">
+</p>
 
 ## 2.4 Input and Output
 
@@ -148,7 +150,9 @@ a = true
 a = "string"
 ```
 
-![Variable examples](assets/variables.png)
+<p align="center">
+  <img src="assets/variables.png" width="300" alt="Centered image">
+</p>
 
 ## 3.5 Type Conversion
 
@@ -249,7 +253,9 @@ else {
 }
 ```
 
-![Conditional execution](assets/conditions.png)
+<p align="center">
+  <img src="assets/conditions.png" width="300" alt="Centered image">
+</p>
 
 ## 5.2 While Loops
 
@@ -275,7 +281,9 @@ for(itr -> 10) {
 }
 ```
 
-![Loop execution](assets/loops.png)
+<p align="center">
+  <img src="assets/loops.png" width="300" alt="Centered image">
+</p>
 
 # 6. Functions
 
@@ -309,7 +317,9 @@ jit function Myfunc() {
 }
 ```
 
-![Function execution](assets/functions.png)
+<p align="center">
+  <img src="assets/functions.png" width="300" alt="Centered image">
+</p>
 
 ---
 
@@ -366,7 +376,9 @@ This program summarizes most of the features of DoubleC. The point of the code i
 
 ## 8.3 Execution Result
 
-![Combined example execution](assets/combined.png)
+<p align="center">
+  <img src="assets/combined.png" width="300" alt="Centered image">
+</p>
 
 ---
 
