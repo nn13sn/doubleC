@@ -335,7 +335,7 @@ Each stage does it's specific task with the information provided by the previous
 - The general architecture diagram:
   
 <p align="center">
-  <img src="assets/architecture.png" width="700" alt="Centered image">
+  <img src="assets/extended_architecture.png" width="1000" alt="Centered image">
 </p>
 
 
